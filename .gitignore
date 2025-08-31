@@ -4,6 +4,8 @@
 
 # Xcode
 #
+UCDfinal/
+
 build/
 *.pbxuser
 !default.pbxuser
