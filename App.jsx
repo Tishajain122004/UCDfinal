@@ -1,59 +1,23 @@
-// /**
-//  * Sample React Native App
-//  * https://github.com/facebook/react-native
-//  *
-//  * @format
-//  */
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// import { NewAppScreen } from '@react-native/new-app-screen';
-// import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-// import {
-//   SafeAreaProvider,
-//   useSafeAreaInsets,
-// } from 'react-native-safe-area-context';
+import Temp from './src/Temp';
+import GetStarted from './src/GetStarted';
+import SignUp from './src/SignUp';
 
-// function App() {
-//   const isDarkMode = useColorScheme() === 'dark';
-
-//   return (
-//     <SafeAreaProvider>
-//       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-//       <AppContent />
-//     </SafeAreaProvider>
-//   );
-// }
-
-// function AppContent() {
-//   const safeAreaInsets = useSafeAreaInsets();
-
-//   return (
-//     <View style={styles.container}>
-//       <NewAppScreen
-//         templateFileName="App.tsx"
-//         safeAreaInsets={safeAreaInsets}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-// });
-
-// export default App;
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-    <View>
-      <Text>Vijay Maliya toh chor hhhhhhhhhh bhaii !!!!</Text>
-    </View>
-  )
-}
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Temp" component={Temp} />
+        <Stack.Screen name="GetStarted" component={GetStarted} />
+          <Stack.Screen name="SignUp" component={SignUp} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
 
-export default App
-
-const styles = StyleSheet.create({})
+export default App;
