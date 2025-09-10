@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  reactnative-env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reactnative-env
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app   # local code ko container ke /app mein mount karega
+    ports:
+      - "8081:8081" # Metro bundler
+      - "3000:3000" # agar web bhi run kare to
+    environment:
+      - NODE_ENV=development
