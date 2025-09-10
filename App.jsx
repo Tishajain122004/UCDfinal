@@ -1,56 +1,45 @@
-// /**
-//  * Sample React Native App
-//  * https://github.com/facebook/react-native
-//  *
-//  * @format
-//  */
-
-// import { NewAppScreen } from '@react-native/new-app-screen';
-// import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-// import {
-//   SafeAreaProvider,
-//   useSafeAreaInsets,
-// } from 'react-native-safe-area-context';
-
-// function App() {
-//   const isDarkMode = useColorScheme() === 'dark';
-
-//   return (
-//     <SafeAreaProvider>
-//       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-//       <AppContent />
-//     </SafeAreaProvider>
-//   );
-// }
-
-// function AppContent() {
-//   const safeAreaInsets = useSafeAreaInsets();
-
-//   return (
-//     <View style={styles.container}>
-//       <NewAppScreen
-//         templateFileName="App.tsx"
-//         safeAreaInsets={safeAreaInsets}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-// });
-
-// export default App;
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Home from './src/screens/home.jsx'
+import Block from './src/screens/block.jsx'
+import More from './src/screens/more.jsx'
 
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+const Tab = createBottomTabNavigator();
+
+
+// import { NavigationContainer } from '@react-navigation/native';
+// const Stack = createNativeStackNavigator();
+
+
+const TabNavigator = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="home" component={Home} />
+      <Tab.Screen name="block" component={Block} />
+      <Tab.Screen name="more" component={More} />
+
+    </Tab.Navigator>
+  );
+}
+
+// const StackNavigator = () => {
+//   return(
+//   <Stack.Navigator>
+//     <Stack.Screen name = "home" component={Home}/>
+//     <Stack.Screen name = "block" component={Block}/>
+//     <Stack.Screen name = "more" component={More}/>
+
+//   </Stack.Navigator>
+//   )
+
+// }
 const App = () => {
   return (
-    <View>
-      <Text>Vijay Maliya toh chor hhhhhhhhhh bhaii !!!!</Text>
-    </View>
+    <NavigationContainer>
+      <TabNavigator/>
+    </NavigationContainer>
   )
 }
 

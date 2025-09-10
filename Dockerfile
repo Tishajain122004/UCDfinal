@@ -42,47 +42,104 @@
 # # # Default command (no code inside image, only env)
 # CMD ["bash"]
 
-# Base image
+# # Base image
+# FROM ubuntu:22.04
+
+# # Set environment variables
+# ENV DEBIAN_FRONTEND=noninteractive
+# ENV ANDROID_HOME=/opt/android-sdk
+# ENV PATH=${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
+# ENV GRADLE_HOME=/opt/gradle/gradle-8.14.3
+# ENV PATH=$GRADLE_HOME/bin:$PATH
+
+# # Install dependencies
+# RUN apt-get update && apt-get install -y \
+#     curl wget unzip git build-essential \
+#     openjdk-17-jdk \
+#     python3 python3-pip \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Install Node.js (20.x) & React Native CLI
+# RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+#     && apt-get install -y nodejs \
+#     && npm install -g npm@latest react-native-cli yarn
+
+# # Install Gradle
+# RUN wget https://services.gradle.org/distributions/gradle-8.14.3-bin.zip -P /tmp \
+#     && unzip /tmp/gradle-8.14.3-bin.zip -d /opt/gradle \
+#     && rm /tmp/gradle-8.14.3-bin.zip
+
+# # Install Android SDK Command-line tools
+# RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
+#     && cd ${ANDROID_HOME}/cmdline-tools \
+#     && wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O commandlinetools.zip \
+#     && unzip commandlinetools.zip -d ${ANDROID_HOME}/cmdline-tools \
+#     && rm commandlinetools.zip \
+#     && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest
+
+# # Accept Android licenses & install required SDK packages
+# RUN yes | sdkmanager --licenses \
+#     && sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+# # Set working directory (empty, code mount hoga run ke time)
+# WORKDIR /app
+
+# # Default command (bash khol de)
+# CMD ["/bin/bash"]
+
+
+#version - 2 
+
+# Updated Dockerfile (Ubuntu 22.04)
 FROM ubuntu:22.04
 
-# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV ANDROID_HOME=/opt/android-sdk
-ENV PATH=${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=${ANDROID_SDK_ROOT}
+ENV PATH=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_HOME}/emulator:${PATH}
 ENV GRADLE_HOME=/opt/gradle/gradle-8.14.3
 ENV PATH=$GRADLE_HOME/bin:$PATH
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV LANG=C.UTF-8
 
-# Install dependencies
 RUN apt-get update && apt-get install -y \
     curl wget unzip git build-essential \
-    openjdk-17-jdk \
+    openjdk-17-jdk-headless \
     python3 python3-pip \
+    unzip lib32stdc++6 lib32z1 libc6-i386 libncurses5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js (20.x) & React Native CLI
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm@latest react-native-cli yarn
+# Node & RN CLI
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm@latest
 
 # Install Gradle
 RUN wget https://services.gradle.org/distributions/gradle-8.14.3-bin.zip -P /tmp \
     && unzip /tmp/gradle-8.14.3-bin.zip -d /opt/gradle \
     && rm /tmp/gradle-8.14.3-bin.zip
 
-# Install Android SDK Command-line tools
-RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
-    && cd ${ANDROID_HOME}/cmdline-tools \
-    && wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O commandlinetools.zip \
-    && unzip commandlinetools.zip -d ${ANDROID_HOME}/cmdline-tools \
-    && rm commandlinetools.zip \
-    && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest
+# Android cmdline tools
+RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    cd ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip && \
+    unzip cmdline-tools.zip && rm cmdline-tools.zip && \
+    mv cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest
 
-# Accept Android licenses & install required SDK packages
-RUN yes | sdkmanager --licenses \
-    && sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+# Accept licenses and install required components (NDK, CMake, build-tools, emulator if needed)
+RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
 
-# Set working directory (empty, code mount hoga run ke time)
+RUN ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
+    "platform-tools" \
+    "platforms;android-34" \
+    "platforms;android-36" \
+    "build-tools;34.0.0" \
+    "build-tools;36.0.0" \
+    "cmake;3.22.1" \
+    "ndk;27.1.12297006" \
+    "emulator"
+
+# Working dir (code mounted at runtime)
 WORKDIR /app
 
-# Default command (bash khol de)
 CMD ["/bin/bash"]
