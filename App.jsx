@@ -26,9 +26,27 @@
 // };
 
 // export default App;
+// // App.js
+// import React from 'react';
+// import { NavigationContainer } from '@react-navigation/native';
+// import TabNavigator from './src/navigation/TabNavigator';
+
+// export default function App() {
+//   return (
+//     <NavigationContainer>
+//       <TabNavigator />
+//     </NavigationContainer>
+//   );
+// }
+
 import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
 import TabNavigator from "./src/navigation/TabNavigator";
 
 export default function App() {
-  return <TabNavigator />;
+  return (
+    <NavigationContainer>
+      <TabNavigator />
+    </NavigationContainer>
+  );
 }
