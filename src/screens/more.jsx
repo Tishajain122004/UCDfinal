@@ -166,7 +166,7 @@ import {
 const screenMap = {
   "study-groups": "StudyGroups",
   analytics: "Analytics",
-  journal: "Journal",
+  Journal: "Journal",
   "study-tasks": "StudyTasks",
   whiteboard: "Whiteboard",
   leaderboard: "Leaderboard",
@@ -177,7 +177,7 @@ const screenMap = {
 const features = [
   { key: "study-groups", title: "Study Groups", subtitle: "Collaborate, chat, and focus together", icon: "👥" },
   { key: "analytics", title: "Analytics", subtitle: "Track your progress and habits", icon: "📊" },
-  { key: "journal", title: "Journal", subtitle: "Daily reflections and insights", icon: "📓" },
+  { key: "Journal", title: "Journal", subtitle: "Daily reflections and insights", icon: "📓" },
   { key: "study-tasks", title: "Study Tasks", subtitle: "Organize your tasks and goals", icon: "✅" },
   { key: "whiteboard", title: "Whiteboard", subtitle: "Draw, brainstorm, and collaborate", icon: "🖊️" },
   { key: "leaderboard", title: "Leaderboard", subtitle: "See who's crushing their goals", icon: "🏆" },
