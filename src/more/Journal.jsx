@@ -1,4 +1,3 @@
-// JournalScreen.js
 import React, { useState } from "react";
 import {
   View,
@@ -9,10 +8,15 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Journal() {
+  const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [newEntry, setNewEntry] = useState("");
+  const [gratefulText, setGratefulText] = useState("");
+  const [accomplishedText, setAccomplishedText] = useState("");
+
   const [journals, setJournals] = useState([
     {
       id: 1,
@@ -34,26 +38,32 @@ export default function Journal() {
       title: "New Journal Entry",
       date: new Date().toDateString(),
       content: newEntry,
-      grateful: "—",
-      accomplished: "—",
+      grateful: gratefulText.trim() || "—",
+      accomplished: accomplishedText.trim() || "—",
       mood: "📝",
       tag: "new",
     };
     setJournals([newJournal, ...journals]);
     setNewEntry("");
+    setGratefulText("");
+    setAccomplishedText("");
     setModalVisible(false);
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Text style={styles.header}>My Journal</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={{ color: '#fff', fontSize: 24 }}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>My Journal</Text>
+        <View style={{ width: 50 }} />
+      </View>
+
       <Text style={styles.subHeader}>Reflect, grow, and track your journey</Text>
 
       {/* Buttons */}
-      <TouchableOpacity style={styles.aiButton}>
-        <Text style={styles.aiText}>✨ AI Writing Prompts</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.newEntryButton}
@@ -104,6 +114,18 @@ export default function Journal() {
               value={newEntry}
               onChangeText={setNewEntry}
             />
+            <TextInput
+              style={styles.input}
+              placeholder="Grateful for..."
+              value={gratefulText}
+              onChangeText={setGratefulText}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Accomplished today..."
+              value={accomplishedText}
+              onChangeText={setAccomplishedText}
+            />
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -127,33 +149,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    padding: 20,
+    paddingTop: 0,
   },
   header: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#a78bfa", // purple
+    height: 60,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0E0E10',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  backBtn: {
+    padding: 8,
+    width: 50,
+    alignItems: 'flex-start',
+  },
+  title: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 18,
   },
   subHeader: {
     fontSize: 14,
     color: "#aaa",
     marginBottom: 20,
-  },
-  aiButton: {
-    backgroundColor: "#1f1f1f",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  aiText: {
-    color: "#fff",
-    textAlign: "center",
+    paddingHorizontal: 20,
+    marginTop: 10,
   },
   newEntryButton: {
-    backgroundColor: "#7c3aed", // purple
+    backgroundColor: "#7c3aed",
     padding: 14,
     borderRadius: 10,
     marginBottom: 20,
+    marginHorizontal: 20,
   },
   newEntryText: {
     color: "#fff",
@@ -161,7 +191,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   journalList: {
-    flex: 1,
+    paddingHorizontal: 20,
   },
   card: {
     backgroundColor: "#1a1a1a",
@@ -233,12 +263,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
   },
-  input: {
+    input: {
     backgroundColor: "#333",
     color: "#fff",
     borderRadius: 10,
     padding: 10,
-    height: 120,
+    height: 100,
     marginBottom: 15,
     textAlignVertical: "top",
   },
@@ -251,15 +281,17 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     color: "#f87171",
+    fontSize: 16,
   },
   saveButton: {
     backgroundColor: "#7c3aed",
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 8,
   },
   saveText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });
