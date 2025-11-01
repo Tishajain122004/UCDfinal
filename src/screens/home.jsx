@@ -1,439 +1,5 @@
-// // import { StyleSheet, Text, View } from 'react-native'
-// // import React from 'react'
-// // import Block from './src/screens/block.jsx'
-// // import More from './src/screens/more.jsx'
-
-// // const Home = ({navigation}) => {
-// //   return (
-// //     <View style = {{width: '100%', height : "20%", backgroundColor : "skyblue", justifyContent : "center"}}>
-// //       <Text>home</Text>
-// //       <Button title='Block' onPress={() => navigation.navigate("block")}/>
-// //       <Button title='More' onPress={() => navigation.navigate("more")}/>
-// //     </View>
-// //   )
-// // }
-
-// // export default Home
-// // const styles = StyleSheet.create({})
-
-// // import { StyleSheet, Text, View, Button } from 'react-native'
-// // import React from 'react'
-
-// // const Home = ({ navigation }) => {
-// //   return (
-// //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: "skyblue" }}>
-// //       <Text style={{ fontSize: 20, marginBottom: 20 }}>Home</Text>
-
-// //       <Button
-// //         title="Go to Block"
-// //         onPress={() => navigation.navigate("block")}
-// //       />
-
-// //       <Button
-// //         title="Go to More"
-// //         onPress={() => navigation.navigate("more")}
-// //       />
-// //     </View>
-// //   )
-// // }
-
-// // export default Home
-
-// // const styles = StyleSheet.create({})
-
-// // Dashboard.js
-// import React from "react";
-// import {
-//   SafeAreaView,
-//   ScrollView,
-//   View,
-//   Text,
-//   StyleSheet,
-//   Pressable,
-//   TextInput,
-//   Platform,
-//   StatusBar,
-// } from "react-native";
-
-// /**
-//  * Dashboard screen (function component) - ready to import in TabNavigator
-//  * Usage: <Tab.Screen name="Dashboard" component={Dashboard} />
-//  */
-// export default function Home({ navigation, route }) {
-//   return (
-//     <SafeAreaView style={styles.safe}>
-//       <StatusBar barStyle="light-content" backgroundColor={styles.safe.backgroundColor} />
-//       <ScrollView contentContainerStyle={styles.container}>
-//         {/* Header */}
-//         <View style={styles.headerWrap}>
-//           <Text style={styles.welcome}>Welcome Back!</Text>
-//           <Text style={styles.headerSub}>
-//             Your AI companion for productivity and{"\n"}wellness.
-//           </Text>
-//         </View>
-
-//         {/* Today's Goals Card */}
-//         <View style={styles.card}>
-//           <View style={styles.cardHeader}>
-//             <View style={styles.headerIconWrap}><Text style={styles.headerIcon}>🎯</Text></View>
-//             <Text style={styles.cardTitle}>Today's Goals</Text>
-//           </View>
-
-//           <View style={styles.goalList}>
-//             <GoalItem
-//               icon="⏰"
-//               title="Study for 3 hours"
-//               badgeText="0/3"
-//               badgeBg="#2C6EF3"
-//             />
-//             <GoalItem
-//               icon="📚"
-//               title="Complete 2 study blocks"
-//               badgeText="0/2"
-//               badgeBg="#7C4CFF"
-//             />
-//             <GoalItem
-//               icon="💗"
-//               title="Journal reflection"
-//               badgeText="Pending"
-//               badgeBg="#B65C93"
-//             />
-//           </View>
-//         </View>
-
-//         {/* Quick Check-in Card */}
-//         <View style={[styles.card, { padding: 16 }]}>
-//           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-//             <View style={styles.checkIconWrap}><Text style={styles.checkIcon}>✨</Text></View>
-//             <Text style={[styles.cardTitle, { marginLeft: 8 }]}>Quick Check-in</Text>
-//           </View>
-//           <Text style={styles.checkSub}>How are you feeling right now?</Text>
-
-//           <Pressable style={styles.moodBtn} onPress={() => console.log("Share Mood pressed")}>
-//             <Text style={styles.moodBtnText}>Share My Mood</Text>
-//           </Pressable>
-//         </View>
-
-//         {/* Chat Widget Card */}
-//         <View style={[styles.chatContainer]}>
-//           <View style={styles.chatHeader}>
-//             <View style={styles.chatHeaderLeft}>
-//               <View style={styles.chatAvatar}><Text style={styles.chatAvatarIcon}>💬</Text></View>
-//               <View>
-//                 <Text style={styles.chatTitle}>StudyBuddy AI</Text>
-//                 <Text style={styles.chatSub}>Your supportive learning companion</Text>
-//               </View>
-//             </View>
-//             <View style={styles.onlineDotWrap}>
-//               <View style={styles.onlineDot} />
-//               <Text style={styles.onlineText}>Online</Text>
-//             </View>
-//           </View>
-
-//           {/* messages area */}
-//           <View style={styles.messages}>
-//             <View style={styles.aiIconSmall}><Text style={{ color: "#fff" }}>🤖</Text></View>
-//             <View style={styles.aiBubbleWrap}>
-//               <Text style={styles.aiBubbleText}>
-//                 Hey there! 👋 I'm your StudyBuddy AI companion.{"\n\n"}
-//                 I'm here to help you stay motivated, focused, and balanced in your learning journey.{"\n\n"}
-//                 How are you feeling today? Ready to crush some goals or need a gentle nudge to get started?
-//               </Text>
-//               <Text style={styles.msgTime}>10:44 AM</Text>
-//             </View>
-//           </View>
-
-//           {/* input area */}
-//           <View style={styles.chatInputRow}>
-//             <TextInput
-//               placeholder="Ask me anything..."
-//               placeholderTextColor="#6C6C72"
-//               style={styles.chatInput}
-//             />
-//             <Pressable style={styles.iconBtn} onPress={() => console.log("mic")}>
-//               <Text style={styles.iconBtnText}>🎙️</Text>
-//             </Pressable>
-//             <Pressable style={styles.iconBtn} onPress={() => console.log("camera")}>
-//               <Text style={styles.iconBtnText}>📷</Text>
-//             </Pressable>
-//             <Pressable style={[styles.sendBtn]} onPress={() => console.log("send")}>
-//               <Text style={styles.sendIcon}>➡️</Text>
-//             </Pressable>
-//           </View>
-//         </View>
-
-//         {/* spacing */}
-//         <View style={{ height: 30 }} />
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// }
-
-// /* Goal item sub-component */
-// function GoalItem({ icon, title, badgeText, badgeBg }) {
-//   return (
-//     <View style={styles.goalRow}>
-//       <View style={styles.goalIconWrap}>
-//         <Text style={styles.goalIcon}>{icon}</Text>
-//       </View>
-
-//       <View style={{ flex: 1 }}>
-//         <Text style={styles.goalTitle}>{title}</Text>
-//       </View>
-
-//       <View style={[styles.badge, { backgroundColor: badgeBg || "#666" }]}>
-//         <Text style={styles.badgeText}>{badgeText}</Text>
-//       </View>
-//     </View>
-//   );
-// }
-
-// /* small helper to convert hex to rgba - returns rgba string */
-// function rgba(hex = "#000000", alpha = 1) {
-//   const h = hex.replace("#", "");
-//   const r = parseInt(h.substring(0, 2), 16);
-//   const g = parseInt(h.substring(2, 4), 16);
-//   const b = parseInt(h.substring(4, 6), 16);
-//   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-// }
-
-// /* styles */
-// const styles = StyleSheet.create({
-//   safe: {
-//     flex: 1,
-//     backgroundColor: "#050405",
-//   },
-//   container: {
-//     paddingHorizontal: 20,
-//     paddingTop: 18,
-//     paddingBottom: 36,
-//   },
-//   headerWrap: {
-//     alignItems: "center",
-//     marginBottom: 14,
-//   },
-//   welcome: {
-//     color: "#7F5CFF",
-//     fontSize: 36,
-//     fontWeight: "800",
-//     textAlign: "center",
-//   },
-//   headerSub: {
-//     color: "#9A9AA0",
-//     textAlign: "center",
-//     marginTop: 8,
-//     fontSize: 15,
-//   },
-
-//   /* card: Today's Goals */
-//   card: {
-//     backgroundColor: "#0E0E10",
-//     borderRadius: 14,
-//     padding: 14,
-//     marginBottom: 18,
-//   },
-//   cardHeader: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     marginBottom: 12,
-//   },
-//   headerIconWrap: {
-//     width: 44,
-//     height: 44,
-//     borderRadius: 12,
-//     backgroundColor: rgba("#3DDC84", 0.08),
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginRight: 10,
-//   },
-//   headerIcon: {
-//     fontSize: 22,
-//   },
-//   cardTitle: {
-//     color: "#FFFFFF",
-//     fontSize: 18,
-//     fontWeight: "800",
-//   },
-
-//   goalList: {
-//     marginTop: 6,
-//   },
-//   goalRow: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     backgroundColor: "#151516",
-//     paddingVertical: 12,
-//     paddingHorizontal: 12,
-//     borderRadius: 10,
-//     marginBottom: 10,
-//   },
-//   goalIconWrap: {
-//     width: 38,
-//     height: 38,
-//     borderRadius: 10,
-//     backgroundColor: "#0F0F10",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginRight: 12,
-//   },
-//   goalIcon: { fontSize: 18 },
-//   goalTitle: {
-//     color: "#EDEEF0",
-//     fontSize: 14,
-//     fontWeight: "600",
-//   },
-//   badge: {
-//     paddingHorizontal: 10,
-//     paddingVertical: 6,
-//     borderRadius: 20,
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginLeft: 12,
-//     minWidth: 58,
-//   },
-//   badgeText: {
-//     color: "#fff",
-//     fontSize: 12,
-//     fontWeight: "700",
-//   },
-
-//   /* Quick check-in */
-//   checkIconWrap: {
-//     width: 36,
-//     height: 36,
-//     borderRadius: 10,
-//     backgroundColor: "rgba(255,200,90,0.08)",
-//     alignItems: "center",
-//     justifyContent: "center",
-//   },
-//   checkIcon: { fontSize: 20 },
-//   checkSub: {
-//     color: "#CFCFD2",
-//     marginBottom: 12,
-//     marginTop: 6,
-//   },
-//   moodBtn: {
-//     marginTop: 6,
-//     backgroundColor: "#F59B17",
-//     paddingVertical: 12,
-//     borderRadius: 10,
-//     alignItems: "center",
-//     justifyContent: "center",
-//     // subtle gradient effect imitation
-//     shadowColor: "#F59B17",
-//     shadowOffset: { width: 0, height: 6 },
-//     shadowOpacity: 0.12,
-//     shadowRadius: 8,
-//     elevation: 2,
-//   },
-//   moodBtnText: {
-//     color: "#fff",
-//     fontWeight: "700",
-//   },
-
-//   /* Chat widget */
-//   chatContainer: {
-//     backgroundColor: "#0B0B0C",
-//     borderRadius: 14,
-//     padding: 0,
-//     overflow: "hidden",
-//   },
-//   chatHeader: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     backgroundColor: "#2D1A45",
-//     paddingHorizontal: 14,
-//     paddingVertical: 12,
-//   },
-//   chatHeaderLeft: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   chatAvatar: {
-//     width: 42,
-//     height: 42,
-//     borderRadius: 12,
-//     backgroundColor: "#6C4CFF",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginRight: 10,
-//   },
-//   chatAvatarIcon: { fontSize: 20, color: "#fff" },
-//   chatTitle: { color: "#FFFFFF", fontWeight: "800" },
-//   chatSub: { color: "#CFCFD2", fontSize: 12 },
-//   onlineDotWrap: { alignItems: "center", flexDirection: "row" },
-//   onlineDot: {
-//     width: 10,
-//     height: 10,
-//     borderRadius: 6,
-//     backgroundColor: "#2BC66E",
-//     marginRight: 6,
-//   },
-//   onlineText: { color: "#9ECFA1", fontSize: 12 },
-
-//   messages: {
-//     flexDirection: "row",
-//     padding: 14,
-//     paddingTop: 18,
-//     backgroundColor: "#050505",
-//     alignItems: "flex-start",
-//   },
-//   aiIconSmall: {
-//     width: 36,
-//     alignItems: "center",
-//     marginRight: 8,
-//     marginTop: 6,
-//   },
-//   aiBubbleWrap: {
-//     backgroundColor: "#0E1113",
-//     borderRadius: 10,
-//     padding: 14,
-//     maxWidth: "85%",
-//   },
-//   aiBubbleText: { color: "#E6F1F4", lineHeight: 20 },
-//   msgTime: { color: "#6C6C72", fontSize: 11, marginTop: 8 },
-
-//   /* input row */
-//   chatInputRow: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     padding: 12,
-//     gap: 8,
-//     backgroundColor: "#050505",
-//   },
-//   chatInput: {
-//     flex: 1,
-//     height: 44,
-//     backgroundColor: "#0E0E10",
-//     borderRadius: 10,
-//     paddingHorizontal: 12,
-//     color: "#fff",
-//   },
-//   iconBtn: {
-//     width: 44,
-//     height: 44,
-//     borderRadius: 10,
-//     backgroundColor: "#0D0D0E",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginLeft: 8,
-//   },
-//   iconBtnText: { fontSize: 18 },
-//   sendBtn: {
-//     width: 48,
-//     height: 44,
-//     borderRadius: 10,
-//     backgroundColor: "#6F4BFF",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     marginLeft: 8,
-//   },
-//   sendIcon: { color: "#fff", fontSize: 18 },
-// });
-
-// home.js
-import React, { useState } from "react";
+// home.js - Modern Aesthetic Version
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -443,16 +9,22 @@ import {
   Pressable,
   TextInput,
   Modal,
-  Platform,
   StatusBar,
   FlatList,
+  ActivityIndicator,
+  Alert,
+  Animated,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useFocusEffect } from "@react-navigation/native";
+import { getAllTasks } from '../services/studyTaskApi';
 
 export default function Home({ navigation }) {
   const [chatText, setChatText] = useState("");
   const [moodModalVisible, setMoodModalVisible] = useState(false);
   const [selectedMood, setSelectedMood] = useState(null);
+  const [todayTasks, setTodayTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
   const moodOptions = [
     { id: "happy", label: "Happy", icon: "emoticon-happy-outline", bg: "#FFB347" },
@@ -465,116 +37,309 @@ export default function Home({ navigation }) {
     { id: "neutral", label: "Neutral", icon: "emoticon-neutral-outline", bg: "#9CA3AF" },
   ];
 
+  const getTopPriorityTasks = (tasks) => {
+    const activeTasks = tasks.filter(task => task.status === 'Active');
+    if (activeTasks.length === 0) return [];
+
+    const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+    const sortedTasks = [...activeTasks].sort((a, b) => {
+      const priorityA = priorityOrder[a.priority] || 999;
+      const priorityB = priorityOrder[b.priority] || 999;
+      return priorityA - priorityB;
+    });
+
+    return sortedTasks.slice(0, 3);
+  };
+
+  const fetchTodayTasks = async () => {
+    console.log("Home.js: Fetching tasks for Today's Goals...");
+    setIsLoadingTasks(true);
+    
+    try {
+      const response = await getAllTasks();
+      
+      if (response.success && response.data) {
+        console.log("Home.js: Tasks fetched successfully:", response.data.length, "tasks");
+        const topTasks = getTopPriorityTasks(response.data);
+        setTodayTasks(topTasks);
+        console.log("Home.js: Top priority tasks:", topTasks.length);
+      } else {
+        console.warn("Home.js: Failed to fetch tasks:", response.error);
+        Alert.alert("Error", "Could not load today's goals");
+      }
+    } catch (error) {
+      console.error("Home.js: Error fetching tasks:", error);
+      Alert.alert("Error", "Something went wrong while loading tasks");
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchTodayTasks();
+    }, [])
+  );
+
+  const getPriorityIcon = (priority) => {
+    switch(priority) {
+      case 'High': return 'fire';
+      case 'Medium': return 'star';
+      case 'Low': return 'clock-outline';
+      default: return 'checkbox-marked-circle-outline';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'High': return { main: '#f87171', gradient: ['#ef4444', '#f87171'] };
+      case 'Medium': return { main: '#a78bfa', gradient: ['#8b5cf6', '#a78bfa'] };
+      case 'Low': return { main: '#6b7280', gradient: ['#4b5563', '#6b7280'] };
+      default: return { main: '#666', gradient: ['#555', '#666'] };
+    }
+  };
+
+  const getTaskProgress = (task) => {
+    const subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+    if (subtasks.length === 0) return { completed: 0, total: 0, text: "Start" };
+    const completed = subtasks.filter(sub => sub.completed).length;
+    const total = subtasks.length;
+    return { completed, total, text: `${completed}/${total}` };
+  };
+
   function onSelectMood(mood) {
     setSelectedMood(mood.id);
     setMoodModalVisible(false);
-    // handle mood selection (send to backend / state as needed)
     console.log("Mood selected:", mood.id);
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={styles.safe.backgroundColor} />
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Header */}
+      <StatusBar barStyle="light-content" backgroundColor="#050405" />
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Modern Header with Gradient */}
         <View style={styles.headerWrap}>
-          <Text style={styles.welcome}>Welcome Back!</Text>
-          <Text style={styles.headerSub}>Your AI companion for productivity and{"\n"}wellness.</Text>
-        </View>
-
-        {/* Today's Goals Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.headerIconWrap}><Icon name="bullseye" size={20} color="#2BD36E" /></View>
-            <Text style={styles.cardTitle}>Today's Goals</Text>
-          </View>
-
-          <View style={styles.goalList}>
-            <GoalItem icon="clock-outline" title="Study for 3 hours" badgeText="0/3" badgeBg="#2C6EF3" />
-            <GoalItem icon="book-open-page-variant" title="Complete 2 study blocks" badgeText="0/2" badgeBg="#7C4CFF" />
-            <GoalItem icon="heart-outline" title="Journal reflection" badgeText="Pending" badgeBg="#B65C93" />
+          <View style={styles.gradientOverlay}>
+            <Text style={styles.welcome}>Welcome Back! ✨</Text>
+            <Text style={styles.headerSub}>
+              Your AI companion for productivity and wellness
+            </Text>
           </View>
         </View>
 
-        {/* Quick Check-in */}
-        <View style={[styles.card, { padding: 16 }]}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-            <View style={styles.checkIconWrap}><Icon name="sparkles" size={20} color="#FFD36B" /></View>
-            <Text style={[styles.cardTitle, { marginLeft: 8 }]}>Quick Check-in</Text>
+        {/* ===== Modern Today's Goals Card ===== */}
+        <Pressable 
+          style={({ pressed }) => [
+            styles.modernCard,
+            styles.goalsCard,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+          ]}
+          onPress={() => navigation.navigate('Study Tasks')}
+        >
+          {/* Gradient Background */}
+          <View style={styles.cardGradient} />
+          
+          {/* Header with Click Hint */}
+          <View style={styles.modernCardHeader}>
+            <View style={styles.headerLeft}>
+              <View style={styles.modernIconWrap}>
+                <Icon name="target" size={22} color="#fff" />
+              </View>
+              <View>
+                <Text style={styles.modernCardTitle}>Today's Goals</Text>
+                <Text style={styles.cardSubtitle}>Tap to view all tasks →</Text>
+              </View>
+            </View>
+            <Pressable 
+              onPress={(e) => {
+                e.stopPropagation();
+                fetchTodayTasks();
+              }}
+              style={styles.refreshBtn}
+            >
+              <Icon name="refresh" size={18} color="#fff" />
+            </Pressable>
           </View>
-          <Text style={styles.checkSub}>How are you feeling right now?</Text>
 
-          <Pressable style={styles.moodBtn} onPress={() => setMoodModalVisible(true)}>
-            <Text style={styles.moodBtnText}>Share My Mood</Text>
+          {/* Tasks List */}
+          <View style={styles.modernGoalList}>
+            {isLoadingTasks ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#a78bfa" />
+                <Text style={styles.loadingText}>Loading your goals...</Text>
+              </View>
+            ) : todayTasks.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconWrap}>
+                  <Icon name="trophy-outline" size={40} color="#fbbf24" />
+                </View>
+                <Text style={styles.emptyTitle}>All Clear! 🎉</Text>
+                <Text style={styles.emptySubtitle}>
+                  No active tasks. Time to create some goals!
+                </Text>
+                <Pressable 
+                  style={styles.modernAddBtn}
+                  onPress={() => navigation.navigate('Study Tasks')}
+                >
+                  <Icon name="plus-circle" size={18} color="#fff" />
+                  <Text style={styles.modernAddBtnText}>Add New Task</Text>
+                </Pressable>
+              </View>
+            ) : (
+              todayTasks.map((task, index) => {
+                const progress = getTaskProgress(task);
+                const colors = getPriorityColor(task.priority);
+                return (
+                  <ModernTaskItem
+                    key={task.id}
+                    icon={getPriorityIcon(task.priority)}
+                    title={task.title}
+                    priority={task.priority}
+                    badgeText={progress.text}
+                    color={colors.main}
+                    index={index}
+                  />
+                );
+              })
+            )}
+          </View>
+        </Pressable>
+
+        {/* Modern Quick Check-in Card */}
+        <View style={[styles.modernCard, styles.checkInCard]}>
+          <View style={styles.checkInGradient} />
+          <View style={styles.modernCardHeader}>
+            <View style={styles.headerLeft}>
+              <View style={[styles.modernIconWrap, { backgroundColor: 'rgba(255, 211, 107, 0.2)' }]}>
+                <Icon name="emoticon-happy-outline" size={22} color="#ffd36b" />
+              </View>
+              <View>
+                <Text style={styles.modernCardTitle}>Quick Check-in</Text>
+                <Text style={styles.cardSubtitle}>How are you feeling?</Text>
+              </View>
+            </View>
+          </View>
+
+          {selectedMood ? (
+            <View style={styles.selectedMoodContainer}>
+              <Icon 
+                name={moodOptions.find(m => m.id === selectedMood)?.icon} 
+                size={32} 
+                color={moodOptions.find(m => m.id === selectedMood)?.bg} 
+              />
+              <Text style={styles.selectedMoodText}>
+                Feeling {moodOptions.find(m => m.id === selectedMood)?.label}
+              </Text>
+            </View>
+          ) : null}
+
+          <Pressable 
+            style={({ pressed }) => [
+              styles.modernMoodBtn,
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+            ]}
+            onPress={() => setMoodModalVisible(true)}
+          >
+            <Icon name="heart-pulse" size={18} color="#fff" />
+            <Text style={styles.modernMoodBtnText}>
+              {selectedMood ? 'Update Mood' : 'Share My Mood'}
+            </Text>
           </Pressable>
         </View>
 
-        {/* Chat Widget */}
-        <View style={[styles.chatContainer]}>
-          <View style={styles.chatHeader}>
+        {/* Modern Chat Widget */}
+        <View style={styles.modernChatContainer}>
+          {/* Header */}
+          <View style={styles.modernChatHeader}>
             <View style={styles.chatHeaderLeft}>
-              <View style={styles.chatAvatar}><Icon name="chat" size={20} color="#fff" /></View>
+              <View style={styles.modernChatAvatar}>
+                <Icon name="robot-outline" size={24} color="#fff" />
+                <View style={styles.chatAvatarGlow} />
+              </View>
               <View>
-                <Text style={styles.chatTitle}>StudyBuddy AI</Text>
-                <Text style={styles.chatSub}>Your supportive learning companion</Text>
+                <Text style={styles.modernChatTitle}>StudyBuddy AI</Text>
+                <View style={styles.onlineIndicator}>
+                  <View style={styles.onlinePulse} />
+                  <Text style={styles.onlineText}>Online Now</Text>
+                </View>
               </View>
             </View>
-            <View style={styles.onlineDotWrap}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Online</Text>
-            </View>
           </View>
 
-          {/* messages area */}
-          <View style={styles.messages}>
-            <View style={styles.aiIconSmall}><Icon name="robot" size={20} color="#fff" /></View>
-            <View style={styles.aiBubbleWrap}>
-              <Text style={styles.aiBubbleText}>
+          {/* Message Bubble */}
+          <View style={styles.modernMessages}>
+            <View style={styles.modernAiBubble}>
+              <Text style={styles.modernAiText}>
                 Hey there! 👋 I'm your StudyBuddy AI companion.{"\n\n"}
                 I'm here to help you stay motivated, focused, and balanced in your learning journey.{"\n\n"}
-                How are you feeling today? Ready to crush some goals or need a gentle nudge to get started?
+                How are you feeling today?
               </Text>
-              <Text style={styles.msgTime}>10:44 AM</Text>
+              <Text style={styles.modernMsgTime}>Just now</Text>
             </View>
           </View>
 
-          {/* input area (icons replaced with vector icons) */}
-          <View style={styles.chatInputRow}>
-            <TextInput
-              placeholder="Ask me anything..."
-              placeholderTextColor="#6C6C72"
-              style={styles.chatInput}
-              value={chatText}
-              onChangeText={setChatText}
-            />
-            <Pressable style={styles.iconBtn} onPress={() => console.log("mic")}>
-              <Icon name="microphone" size={18} color="#CFCFD2" />
-            </Pressable>
-            <Pressable style={styles.iconBtn} onPress={() => console.log("camera")}>
-              <Icon name="camera" size={18} color="#CFCFD2" />
-            </Pressable>
-            <Pressable style={[styles.sendBtn]} onPress={() => { console.log("send:", chatText); setChatText(""); }}>
-              <Icon name="send" size={18} color="#fff" />
-            </Pressable>
+          {/* Modern Input */}
+          <View style={styles.modernChatInput}>
+            <View style={styles.inputWrapper}>
+              <Icon name="pencil-outline" size={18} color="#6C6C72" style={styles.inputIcon} />
+              <TextInput
+                placeholder="Type your message..."
+                placeholderTextColor="#6C6C72"
+                style={styles.modernTextInput}
+                value={chatText}
+                onChangeText={setChatText}
+              />
+            </View>
+            <View style={styles.actionButtons}>
+              <Pressable style={styles.modernIconBtn}>
+                <Icon name="microphone" size={20} color="#9CA3AF" />
+              </Pressable>
+              <Pressable style={styles.modernIconBtn}>
+                <Icon name="camera" size={20} color="#9CA3AF" />
+              </Pressable>
+              <Pressable 
+                style={styles.modernSendBtn}
+                onPress={() => { 
+                  console.log("send:", chatText); 
+                  setChatText(""); 
+                }}
+              >
+                <Icon name="send" size={18} color="#fff" />
+              </Pressable>
+            </View>
           </View>
         </View>
 
-        <View style={{ height: 30 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Mood Modal */}
+      {/* Modern Mood Modal */}
       <Modal
         visible={moodModalVisible}
         animationType="slide"
         transparent
         onRequestClose={() => setMoodModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>How are you feeling?</Text>
-              <Pressable onPress={() => setMoodModalVisible(false)} style={styles.modalClose}>
-                <Icon name="close" size={20} color="#fff" />
+        <View style={styles.modernModalOverlay}>
+          <Pressable 
+            style={styles.modernModalBackdrop} 
+            onPress={() => setMoodModalVisible(false)}
+          />
+          <View style={styles.modernModalCard}>
+            <View style={styles.modernModalHandle} />
+            <View style={styles.modernModalHeader}>
+              <View>
+                <Text style={styles.modernModalTitle}>How are you feeling?</Text>
+                <Text style={styles.modernModalSubtitle}>Select your current mood</Text>
+              </View>
+              <Pressable 
+                onPress={() => setMoodModalVisible(false)} 
+                style={styles.modernModalClose}
+              >
+                <Icon name="close" size={22} color="#fff" />
               </Pressable>
             </View>
 
@@ -582,24 +347,26 @@ export default function Home({ navigation }) {
               data={moodOptions}
               keyExtractor={(item) => item.id}
               numColumns={2}
-              contentContainerStyle={{ paddingVertical: 8 }}
-              columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 12 }}
+              contentContainerStyle={styles.moodGrid}
+              columnWrapperStyle={styles.moodRow}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => onSelectMood(item)}
                   style={({ pressed }) => [
-                    styles.moodItem,
+                    styles.modernMoodItem,
                     { backgroundColor: item.bg },
-                    pressed && { opacity: 0.85 }
+                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] }
                   ]}
                 >
-                  <Icon name={item.icon} size={30} color="#fff" />
-                  <Text style={styles.moodLabel}>{item.label}</Text>
+                  <Icon name={item.icon} size={36} color="#fff" />
+                  <Text style={styles.modernMoodLabel}>{item.label}</Text>
                 </Pressable>
               )}
             />
 
-            <Text style={styles.modalHint}>Your mood helps me provide better support and suggestions</Text>
+            <Text style={styles.modernModalHint}>
+              💡 Your mood helps me provide better support and suggestions
+            </Text>
           </View>
         </View>
       </Modal>
@@ -607,93 +374,509 @@ export default function Home({ navigation }) {
   );
 }
 
-/* small subcomponent and helpers */
-function GoalItem({ icon, title, badgeText, badgeBg }) {
+/* Modern Task Item Component */
+function ModernTaskItem({ icon, title, priority, badgeText, color, index }) {
   return (
-    <View style={styles.goalRow}>
-      <View style={styles.goalIconWrap}>
-        <Icon name={icon} size={18} color="#CFCFD2" />
+    <View style={[styles.modernTaskRow, { animationDelay: `${index * 100}ms` }]}>
+      <View style={styles.taskContent}>
+        <View style={[styles.modernTaskIcon, { backgroundColor: color + '20' }]}>
+          <Icon name={icon} size={18} color={color} />
+        </View>
+        <View style={styles.taskInfo}>
+          <Text style={styles.modernTaskTitle} numberOfLines={1}>
+            {title}
+          </Text>
+          <View style={styles.taskMeta}>
+            <View style={[styles.priorityDot, { backgroundColor: color }]} />
+            <Text style={[styles.priorityLabel, { color: color }]}>
+              {priority} Priority
+            </Text>
+          </View>
+        </View>
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.goalTitle}>{title}</Text>
-      </View>
-      <View style={[styles.badge, { backgroundColor: badgeBg || "#666" }]}>
-        <Text style={styles.badgeText}>{badgeText}</Text>
+      <View style={[styles.modernBadge, { backgroundColor: color }]}>
+        <Text style={styles.modernBadgeText}>{badgeText}</Text>
       </View>
     </View>
   );
 }
 
-function onSelectMood(mood) {
-  // placeholder if needed from outside - left intentionally
-  console.log("mood selected (global):", mood.id);
-}
-
-/* styles */
+/* Modern Styles */
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#050405" },
-  container: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 36 },
+  container: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 36 },
 
-  headerWrap: { alignItems: "center", marginBottom: 14 },
-  welcome: { color: "#7F5CFF", fontSize: 36, fontWeight: "800", textAlign: "center" },
-  headerSub: { color: "#9A9AA0", textAlign: "center", marginTop: 8, fontSize: 15 },
+  // Header
+  headerWrap: { 
+    marginBottom: 24,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  gradientOverlay: {
+    padding: 16,
+  },
+  welcome: { 
+    color: "#fff", 
+    fontSize: 32, 
+    fontWeight: "900", 
+    textAlign: "center",
+    letterSpacing: -0.5,
+  },
+  headerSub: { 
+    color: "#9CA3AF", 
+    textAlign: "center", 
+    marginTop: 8, 
+    fontSize: 14,
+    lineHeight: 20,
+  },
 
-  card: { backgroundColor: "#0E0E10", borderRadius: 14, padding: 14, marginBottom: 18 },
-  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  headerIconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(61,220,132,0.08)", alignItems: "center", justifyContent: "center", marginRight: 10 },
-  cardTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+  // Modern Card Base
+  modernCard: {
+    backgroundColor: "#0E0E10",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
 
-  goalList: { marginTop: 6 },
-  goalRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#151516", paddingVertical: 12, paddingHorizontal: 12, borderRadius: 10, marginBottom: 10 },
-  goalIconWrap: { width: 38, height: 38, borderRadius: 10, backgroundColor: "#0F0F10", alignItems: "center", justifyContent: "center", marginRight: 12 },
-  goalIcon: { fontSize: 18 },
-  goalTitle: { color: "#EDEEF0", fontSize: 14, fontWeight: "600" },
-  badge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, alignItems: "center", justifyContent: "center", marginLeft: 12, minWidth: 58 },
-  badgeText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  goalsCard: {
+    backgroundColor: '#0a0a0b',
+  },
 
-  checkIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,200,90,0.08)", alignItems: "center", justifyContent: "center" },
-  checkIcon: { fontSize: 20 },
-  checkSub: { color: "#CFCFD2", marginBottom: 12, marginTop: 6 },
-  moodBtn: { marginTop: 6, backgroundColor: "#F59B17", paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  moodBtnText: { color: "#fff", fontWeight: "700" },
+  cardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    opacity: 0.1,
+  },
 
-  chatContainer: { backgroundColor: "#0B0B0C", borderRadius: 14, padding: 0, overflow: "hidden" },
-  chatHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#2D1A45", paddingHorizontal: 14, paddingVertical: 12 },
-  chatHeaderLeft: { flexDirection: "row", alignItems: "center" },
-  chatAvatar: { width: 42, height: 42, borderRadius: 12, backgroundColor: "#6C4CFF", alignItems: "center", justifyContent: "center", marginRight: 10 },
-  chatAvatarIcon: { fontSize: 20, color: "#fff" },
-  chatTitle: { color: "#FFFFFF", fontWeight: "800" },
-  chatSub: { color: "#CFCFD2", fontSize: 12 },
-  onlineDotWrap: { alignItems: "center", flexDirection: "row" },
-  onlineDot: { width: 10, height: 10, borderRadius: 6, backgroundColor: "#2BC66E", marginRight: 6 },
-  onlineText: { color: "#9ECFA1", fontSize: 12 },
-
-  messages: { flexDirection: "row", padding: 14, paddingTop: 18, backgroundColor: "#050505", alignItems: "flex-start" },
-  aiIconSmall: { width: 36, alignItems: "center", marginRight: 8, marginTop: 6 },
-  aiBubbleWrap: { backgroundColor: "#0E1113", borderRadius: 10, padding: 14, maxWidth: "85%" },
-  aiBubbleText: { color: "#E6F1F4", lineHeight: 20 },
-  msgTime: { color: "#6C6C72", fontSize: 11, marginTop: 8 },
-
-  chatInputRow: { flexDirection: "row", alignItems: "center", padding: 12, gap: 8, backgroundColor: "#050505" },
-  chatInput: { flex: 1, height: 44, backgroundColor: "#0E0E10", borderRadius: 10, paddingHorizontal: 12, color: "#fff" },
-  iconBtn: { width: 44, height: 44, borderRadius: 10, backgroundColor: "#0D0D0E", alignItems: "center", justifyContent: "center", marginLeft: 8 },
-  iconBtnText: { fontSize: 18 },
-  sendBtn: { width: 48, height: 44, borderRadius: 10, backgroundColor: "#6F4BFF", alignItems: "center", justifyContent: "center", marginLeft: 8 },
-
-  /* Modal styles */
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#050505", borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingTop: 14, paddingBottom: 28 },
-  modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, marginBottom: 8 },
-  modalTitle: { color: "#fff", fontSize: 20, fontWeight: "700" },
-  modalClose: { padding: 8 },
-  moodItem: {
-    width: "47%",
-    height: 110,
+  // Card Header
+  modernCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  modernIconWrap: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  modernCardTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  cardSubtitle: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  refreshBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Goals List
+  modernGoalList: {
+    gap: 10,
+  },
+
+  // Modern Task Row
+  modernTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#151517",
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  taskContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  modernTaskIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  taskInfo: {
+    flex: 1,
+  },
+  modernTaskTitle: {
+    color: "#E5E7EB",
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  taskMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  priorityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  priorityLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  modernBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    minWidth: 50,
+    alignItems: "center",
+  },
+  modernBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // Loading & Empty States
+  loadingContainer: {
+    paddingVertical: 32,
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#6B7280",
+    marginTop: 12,
+    fontSize: 14,
+  },
+  emptyContainer: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
-  moodLabel: { marginTop: 8, color: "#fff", fontWeight: "700" },
-  modalHint: { color: "#9A9AA0", textAlign: "center", marginTop: 8, paddingHorizontal: 20, fontSize: 13 },
+  emptyTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    color: "#6B7280",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  modernAddBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#8b5cf6",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 6,
+  },
+  modernAddBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  // Check-in Card
+  checkInCard: {
+    backgroundColor: '#0a0a0b',
+  },
+  checkInGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    opacity: 0.08,
+  },
+  selectedMoodContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    gap: 10,
+  },
+  selectedMoodText: {
+    color: "#E5E7EB",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  modernMoodBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f59e0b",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+  },
+  modernMoodBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  // Modern Chat Container
+  modernChatContainer: {
+    backgroundColor: "#0a0a0b",
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modernChatHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#1a1a2e",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  chatHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  modernChatAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#8b5cf6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    position: 'relative',
+  },
+  chatAvatarGlow: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#8b5cf6",
+    opacity: 0.3,
+  },
+  modernChatTitle: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  onlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  onlinePulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#10b981",
+    marginRight: 6,
+  },
+  onlineText: {
+    color: "#6ee7b7",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Messages
+  modernMessages: {
+    padding: 16,
+    backgroundColor: "#050505",
+  },
+  modernAiBubble: {
+    backgroundColor: "#151517",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modernAiText: {
+    color: "#E5E7EB",
+    lineHeight: 22,
+    fontSize: 14,
+  },
+  modernMsgTime: {
+    color: "#6B7280",
+    fontSize: 11,
+    marginTop: 10,
+  },
+
+  // Modern Input
+  modernChatInput: {
+    padding: 12,
+    backgroundColor: "#050505",
+    gap: 10,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#151517",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  modernTextInput: {
+    flex: 1,
+    height: 48,
+    color: "#fff",
+    fontSize: 14,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  modernIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#151517",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modernSendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#8b5cf6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Modern Modal
+  modernModalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  modernModalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
+  modernModalCard: {
+    backgroundColor: "#0E0E10",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 8,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modernModalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#374151',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modernModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  modernModalTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  modernModalSubtitle: {
+    color: "#6B7280",
+    fontSize: 13,
+    marginTop: 2,
+  },
+  modernModalClose: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  moodGrid: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  moodRow: {
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  modernMoodItem: {
+    width: "48%",
+    height: 120,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modernMoodLabel: {
+    marginTop: 10,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  modernModalHint: {
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 16,
+    paddingHorizontal: 24,
+    fontSize: 13,
+    lineHeight: 20,
+  },
 });
