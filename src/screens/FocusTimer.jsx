@@ -832,11 +832,13 @@ import {
   ScrollView,
   FlatList,
   StatusBar,
-  // AsyncStorage ko hata diya gaya hai
+  AppState,
+  Platform,
 } from 'react-native';
-// API service ko import karein
-import { createFocusSession, getAllFocusSessions } from '../services/focusApi'; 
-import { useFocusEffect } from '@react-navigation/native'; // useFocusEffect zaroori hai
+import BackgroundTimer from 'react-native-background-timer';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import { createFocusSession, getAllFocusSessions } from '../services/focusApi';
+import { useFocusEffect } from '@react-navigation/native';
 
 const FocusTimer = () => {
   const [mode, setMode] = useState('timer');
@@ -853,18 +855,173 @@ const FocusTimer = () => {
   const [selectedHours, setSelectedHours] = useState(0);
   const [selectedMins, setSelectedMins] = useState(25);
   
-  const [sessions, setSessions] = useState([]); // Database se aayega
+  const [sessions, setSessions] = useState([]);
   const [focusTime, setFocusTime] = useState('0h 0m');
   
   const intervalRef = useRef(null);
+  const appState = useRef(AppState.currentState);
+  const backgroundStartTime = useRef(null);
+  const notificationId = useRef(null);
 
-  // AsyncStorage logic (loadSessions, saveSessions) hata diya gaya hai
+  // ===== NOTIFICATION SETUP =====
+  useEffect(() => {
+    setupNotifications();
+    
+    return () => {
+      if (notificationId.current) {
+        notifee.cancelNotification(notificationId.current);
+      }
+    };
+  }, []);
 
-  // (No change) Stats calculate karein
+  const setupNotifications = async () => {
+    // Request permissions (iOS)
+    if (Platform.OS === 'ios') {
+      await notifee.requestPermission();
+    }
+
+    // Create notification channel (Android)
+    await notifee.createChannel({
+      id: 'focus-timer',
+      name: 'Focus Timer',
+      importance: AndroidImportance.HIGH,
+      sound: 'default',
+      vibration: true,
+    });
+
+    // Handle notification actions
+    notifee.onBackgroundEvent(async ({ type, detail }) => {
+      if (type === EventType.DISMISSED) {
+        console.log('Notification dismissed');
+      }
+    });
+  };
+
+  // ===== APP STATE CHANGE (Background/Foreground) =====
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('App came to foreground');
+        
+        if (isRunning && backgroundStartTime.current) {
+          const elapsed = Math.floor((Date.now() - backgroundStartTime.current) / 1000);
+          
+          if (mode === 'timer') {
+            setTimeLeft(prev => Math.max(0, prev - elapsed));
+          } else {
+            setTimeLeft(prev => prev + elapsed);
+          }
+          
+          backgroundStartTime.current = null;
+        }
+        
+        // Cancel notification when app opens
+        if (notificationId.current) {
+          notifee.cancelNotification(notificationId.current);
+          notificationId.current = null;
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        console.log('App went to background');
+        backgroundStartTime.current = Date.now();
+        
+        if (isRunning) {
+          showOngoingNotification();
+        }
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isRunning, mode, timeLeft]);
+
+  // ===== ONGOING NOTIFICATION =====
+  const showOngoingNotification = async () => {
+    const formattedTime = formatTime(timeLeft);
+    
+    try {
+      notificationId.current = await notifee.displayNotification({
+        id: 'focus-timer-ongoing',
+        title: isBreak ? '🌙 Break Time' : '🎯 Focus Timer Active',
+        body: `${formattedTime} ${isBreak ? 'break' : mode} in progress`,
+        android: {
+          channelId: 'focus-timer',
+          ongoing: true,
+          autoCancel: false,
+          importance: AndroidImportance.HIGH,
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          sound: 'default',
+        },
+      });
+    } catch (error) {
+      console.error('Error showing notification:', error);
+    }
+  };
+
+  // ===== COMPLETION NOTIFICATION =====
+  const showCompletionNotification = async (duration) => {
+    const hrs = Math.floor(duration / 3600);
+    const mins = Math.floor((duration % 3600) / 60);
+    const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+    
+    try {
+      await notifee.displayNotification({
+        title: '🎉 Congratulations!',
+        body: `You focused for ${timeStr}! Great work!`,
+        android: {
+          channelId: 'focus-timer',
+          importance: AndroidImportance.HIGH,
+          sound: 'default',
+          vibrationPattern: [300, 500],
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          sound: 'default',
+        },
+      });
+    } catch (error) {
+      console.error('Error showing completion notification:', error);
+    }
+  };
+
+  // ===== BREAK NOTIFICATION =====
+  const showBreakNotification = async (duration, isComplete = false) => {
+    try {
+      await notifee.displayNotification({
+        title: isComplete ? '☕ Break Complete!' : '☕ Break Started',
+        body: isComplete ? 'Time to get back to work!' : `${duration / 60} minute break in progress`,
+        android: {
+          channelId: 'focus-timer',
+          importance: AndroidImportance.HIGH,
+          sound: 'default',
+          ongoing: !isComplete,
+          autoCancel: isComplete,
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          sound: 'default',
+        },
+      });
+    } catch (error) {
+      console.error('Error showing break notification:', error);
+    }
+  };
+
+  // ===== CALCULATE STATS =====
   const calculateStats = (sessionList) => {
     const today = new Date().toDateString();
     const todaySessions = sessionList.filter(s => 
-      new Date(s.created_at).toDateString() === today // 'date' ko 'created_at' se replace kiya
+      new Date(s.created_at).toDateString() === today
     );
     
     const totalFocus = todaySessions.reduce((acc, s) => acc + s.duration, 0);
@@ -873,57 +1030,48 @@ const FocusTimer = () => {
     setFocusTime(`${hrs}h ${mins}m`);
   };
 
-  // Naya Function: Database se sessions fetch karein
+  // ===== FETCH SESSIONS =====
   const fetchSessions = async () => {
     try {
       const response = await getAllFocusSessions();
       if (response.success) {
         setSessions(response.data);
-        calculateStats(response.data); // Stats ko naye data se calculate karein
-      } else {
-        console.error('Error fetching sessions:', response.error);
+        calculateStats(response.data);
       }
     } catch (e) {
       console.error('Error loading sessions:', e);
     }
   };
 
-  // Jab bhi screen focus mein aaye, sessions refresh karein
   useFocusEffect(
     React.useCallback(() => {
       fetchSessions();
     }, [])
   );
 
-  // Naya Function: Session ko Database mein save karein
+  // ===== SAVE SESSION TO DB =====
   const saveSessionToDb = async (newSession) => {
-    // ===== YEH RAHI AAPKI 5 MINUTE WAALI CONDITION (Frontend par bhi) =====
-    // 5 minutes = 300 seconds
     if (newSession.duration < 120) {
-      console.log(`Session ${newSession.duration}s ka tha, 5 min se kam. Save nahi kiya.`);
-      return; // 5 min se kam hai, save mat karo
+      console.log(`Session ${newSession.duration}s, less than 2 min. Not saved.`);
+      return;
     }
-    // =============================================================
 
     try {
       const response = await createFocusSession(newSession);
       if (response.success && response.data) {
-        // Session save ho gaya, ab local list ko update karein
         const updatedList = [response.data, ...sessions];
         setSessions(updatedList);
-        calculateStats(updatedList); // Stats refresh karein
-      } else {
-        console.log(response.message); // "Session 5 minute se kam tha..."
+        calculateStats(updatedList);
       }
     } catch (e) {
       console.error('Error saving session to DB:', e);
     }
   };
 
-  // (Timer logic... No changes)
+  // ===== BACKGROUND TIMER LOGIC =====
   useEffect(() => {
     if (isRunning) {
-      intervalRef.current = setInterval(() => {
+      BackgroundTimer.runBackgroundTimer(() => {
         if (mode === 'timer') {
           setTimeLeft(prev => {
             if (prev <= 1) {
@@ -937,34 +1085,40 @@ const FocusTimer = () => {
         }
       }, 1000);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      BackgroundTimer.stopBackgroundTimer();
     }
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      BackgroundTimer.stopBackgroundTimer();
     };
   }, [isRunning, mode]);
 
-  // handleTimerComplete (UPDATED)
-  const handleTimerComplete = () => {
+  // ===== TIMER COMPLETE =====
+  const handleTimerComplete = async () => {
     setIsRunning(false);
+    BackgroundTimer.stopBackgroundTimer();
+    
+    if (notificationId.current) {
+      await notifee.cancelNotification(notificationId.current);
+      notificationId.current = null;
+    }
+    
     if (!isBreak && mode === 'timer') {
       const elapsed = initialTime;
+      
+      await showCompletionNotification(elapsed);
+      
       const newSession = {
-        // id, date ab backend par banega
         duration: elapsed,
         mode: mode,
         completed: true,
       };
-      // saveSessions(updated) ko naye function se replace karein
-      saveSessionToDb(newSession); 
+      saveSessionToDb(newSession);
     }
     
     if (isBreak) {
-      // Resume timer after break
+      await showBreakNotification(0, true);
+      
       setTimeLeft(pausedTime);
       setIsBreak(false);
       setIsRunning(true);
@@ -974,7 +1128,7 @@ const FocusTimer = () => {
     }
   };
 
-  // startFocus (No change)
+  // ===== START FOCUS =====
   const startFocus = () => {
     if (timeLeft === 0 && mode === 'timer') {
       setShowDurationPicker(true);
@@ -984,25 +1138,33 @@ const FocusTimer = () => {
       setInitialTime(0);
     }
     setIsRunning(true);
+    
+    if (AppState.currentState !== 'active') {
+      showOngoingNotification();
+    }
   };
 
-  // stopFocus (UPDATED)
-  const stopFocus = () => {
+  // ===== STOP FOCUS =====
+  const stopFocus = async () => {
     setIsRunning(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+    BackgroundTimer.stopBackgroundTimer();
+    
+    if (notificationId.current) {
+      await notifee.cancelNotification(notificationId.current);
+      notificationId.current = null;
     }
     
-    if (!isBreak && (timeLeft > 0 || initialTime > 0)) { // Thoda logic clean kiya
+    if (!isBreak && (timeLeft > 0 || initialTime > 0)) {
       const elapsed = (mode === 'timer') ? (initialTime - timeLeft) : timeLeft;
       
-      if (elapsed > 0) { // Sirf tab save karein jab time chala ho
+      if (elapsed > 0) {
+        await showCompletionNotification(elapsed);
+        
         const newSession = {
           duration: elapsed,
           mode: mode,
           completed: mode === 'stopwatch' || timeLeft === 0,
         };
-        // saveSessions(updated) ko naye function se replace karein
         saveSessionToDb(newSession);
       }
     }
@@ -1011,18 +1173,21 @@ const FocusTimer = () => {
     setInitialTime(0);
     setIsBreak(false);
     setPausedTime(0);
+    backgroundStartTime.current = null;
   };
 
-  // takeBreak (No change)
+  // ===== TAKE BREAK =====
   const takeBreak = (duration) => {
     setPausedTime(timeLeft);
     setTimeLeft(duration);
     setIsBreak(true);
     setIsRunning(true);
     setShowBreakOptions(false);
+    
+    showBreakNotification(duration, false);
   };
 
-  // formatTime (No change)
+  // ===== FORMAT TIME =====
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -1034,21 +1199,20 @@ const FocusTimer = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // setDuration (No change)
+  // ===== SET DURATION =====
   const setDuration = () => {
     const totalSecs = selectedHours * 3600 + selectedMins * 60;
-    if (totalSecs === 0) {
-      return;
-    }
+    if (totalSecs === 0) return;
+    
     setInitialTime(totalSecs);
     setTimeLeft(totalSecs);
     setShowDurationPicker(false);
     setIsRunning(true);
   };
 
-  // renderSession (UPDATED)
+  // ===== RENDER SESSION =====
   const renderSession = ({ item }) => {
-    const date = new Date(item.created_at); // 'date' ko 'created_at' se replace kiya
+    const date = new Date(item.created_at);
     const hrs = Math.floor(item.duration / 3600);
     const mins = Math.floor((item.duration % 3600) / 60);
     
@@ -1069,10 +1233,8 @@ const FocusTimer = () => {
     );
   };
 
-  // progress (No change)
   const progress = initialTime > 0 && mode === 'timer' ? ((initialTime - timeLeft) / initialTime) * 100 : 0;
 
-  // ===== RETURN (JSX) - KOI CHANGE NAHI =====
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -1100,10 +1262,8 @@ const FocusTimer = () => {
           onPress={() => !isRunning && timeLeft === 0 && mode === 'timer' && setShowDurationPicker(true)}
           activeOpacity={0.8}
         >
-          {/* Full Circle Border */}
           <View style={styles.fullCircle} />
           
-          {/* Progress Ring */}
           {mode === 'timer' && initialTime > 0 && (
             <View style={styles.progressRing}>
               <View style={[styles.progressFill, { 
@@ -1264,14 +1424,14 @@ const FocusTimer = () => {
             <Text style={styles.breakModalTitle}>Take a Break</Text>
             <TouchableOpacity 
               style={styles.breakOptionBtn}
-              onPress={() => takeBreak(120)} // 5 min
+              onPress={() => takeBreak(300)}
             >
               <Text style={styles.breakOptionText}>☕ Short Break</Text>
               <Text style={styles.breakOptionTime}>5 minutes</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.breakOptionBtn}
-              onPress={() => takeBreak(900)} // 15 min
+              onPress={() => takeBreak(900)}
             >
               <Text style={styles.breakOptionText}>🌙 Long Break</Text>
               <Text style={styles.breakOptionTime}>15 minutes</Text>
@@ -1307,367 +1467,71 @@ const FocusTimer = () => {
   );
 };
 
-// ===== STYLES (KOI CHANGE NAHI) =====
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '600',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  focusBadge: {
-    backgroundColor: '#1a1a1a',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  focusText: {
-    color: '#888',
-    fontSize: 13,
-  },
-  historyBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1a1a1a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  historyIcon: {
-    fontSize: 18,
-  },
-  timerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  timerWrapper: {
-    position: 'relative',
-    width: 240,
-    height: 240,
-    marginBottom: 40,
-  },
-  fullCircle: {
-    position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    borderWidth: 3,
-    borderColor: '#1a1a1a',
-  },
-  progressRing: {
-    position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: 120,
-    borderWidth: 3,
-    borderColor: '#fff',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
-  timerInner: {
-    position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timerText: {
-    color: '#fff',
-    fontSize: 42,
-    fontWeight: '300',
-    letterSpacing: 2,
-  },
-  breakLabel: {
-    color: '#888',
-    fontSize: 13,
-    marginTop: 8,
-  },
-  tapToStart: {
-    color: '#555',
-    fontSize: 13,
-    marginTop: 8,
-  },
-  modeToggle: {
-    flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    padding: 3,
-  },
-  modeBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 17,
-  },
-  modeBtnActive: {
-    backgroundColor: '#fff',
-  },
-  modeBtnText: {
-    color: '#888',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modeBtnTextActive: {
-    color: '#000',
-  },
-  controls: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  startBtn: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 24,
-    alignItems: 'center',
-  },
-  startBtnText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  runningControls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  breakBtn: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    padding: 16,
-    borderRadius: 24,
-    alignItems: 'center',
-  },
-  breakBtnText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  stopBtn: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    padding: 16,
-    borderRadius: 24,
-    alignItems: 'center',
-  },
-  stopBtnFull: {
-    flex: 1,
-  },
-  stopBtnText: {
-    color: '#ff4444',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pickerModal: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    padding: 20,
-    width: '80%',
-    maxWidth: 300,
-  },
-  pickerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 30,
-    height: 180,
-    marginBottom: 20,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-    width: 70,
-  },
-  pickerLabelTop: {
-    color: '#888',
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  pickerScroll: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  pickerItem: {
-    padding: 8,
-    minWidth: 50,
-    alignItems: 'center',
-    borderRadius: 8,
-    marginVertical: 2,
-  },
-  pickerItemSelected: {
-    backgroundColor: '#fff',
-  },
-  pickerText: {
-    color: '#666',
-    fontSize: 16,
-  },
-  pickerTextSelected: {
-    color: '#000',
-    fontWeight: '600',
-  },
-  pickerButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  cancelBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 14,
-    alignItems: 'center',
-    backgroundColor: '#0a0a0a',
-  },
-  cancelBtnText: {
-    color: '#888',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  setBtn: {
-    flex: 2,
-    padding: 12,
-    borderRadius: 14,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  setBtnText: {
-    color: '#000',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  breakModal: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    padding: 24,
-    width: '80%',
-    maxWidth: 300,
-  },
-  breakModalTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  breakOptionBtn: {
-    backgroundColor: '#0a0a0a',
-    padding: 16,
-    borderRadius: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  breakOptionText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  breakOptionTime: {
-    color: '#888',
-    fontSize: 13,
-  },
-  historyModal: {
-    backgroundColor: '#1a1a1a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    maxHeight: '80%',
-    width: '100%',
-    position: 'absolute',
-    bottom: 0,
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  historyTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '600',
-  },
-  closeBtn: {
-    color: '#888',
-    fontSize: 28,
-    fontWeight: '300',
-  },
-  sessionList: {
-    // History modal ki list ke liye thodi height set karein (optional)
-    // height: 300 
-  },
-  sessionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0a',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 8,
-  },
-  sessionLeft: {
-    flex: 1,
-  },
-  sessionDate: {
-    color: '#888',
-    fontSize: 14,
-  },
-  sessionRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sessionDuration: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  completedBadge: {
-    color: '#4cd964',
-    fontSize: 16,
-  },
-  emptyText: {
-    color: '#555',
-    textAlign: 'center',
-    marginTop: 40,
-    fontSize: 14,
-  },
+  container: { flex: 1, backgroundColor: '#000' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 },
+  headerTitle: { color: '#fff', fontSize: 28, fontWeight: '600' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  focusBadge: { backgroundColor: '#1a1a1a', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  focusText: { color: '#888', fontSize: 13 },
+  historyBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a1a1a', alignItems: 'center', justifyContent: 'center' },
+  historyIcon: { fontSize: 18 },
+  timerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
+  timerWrapper: { position: 'relative', width: 240, height: 240, marginBottom: 40 },
+  fullCircle: { position: 'absolute', width: 240, height: 240, borderRadius: 120, borderWidth: 3, borderColor: '#1a1a1a' },
+  progressRing: { position: 'absolute', width: 240, height: 240, borderRadius: 120, overflow: 'hidden' },
+  progressFill: { position: 'absolute', width: '100%', height: '100%', borderRadius: 120, borderWidth: 3, borderColor: '#fff', borderRightColor: 'transparent', borderBottomColor: 'transparent' },
+  timerInner: { position: 'absolute', width: 240, height: 240, borderRadius: 120, justifyContent: 'center', alignItems: 'center' },
+  timerText: { color: '#fff', fontSize: 42, fontWeight: '300', letterSpacing: 2 },
+  breakLabel: { color: '#888', fontSize: 13, marginTop: 8 },
+  tapToStart: { color: '#555', fontSize: 13, marginTop: 8 },
+  modeToggle: { flexDirection: 'row', backgroundColor: '#1a1a1a', borderRadius: 20, padding: 3 },
+  modeBtn: { paddingHorizontal: 24, paddingVertical: 8, borderRadius: 17 },
+  modeBtnActive: { backgroundColor: '#fff' },
+  modeBtnText: { color: '#888', fontSize: 14, fontWeight: '500' },
+  modeBtnTextActive: { color: '#000' },
+  controls: { paddingHorizontal: 24, paddingBottom: 40 },
+  startBtn: { backgroundColor: '#fff', padding: 16, borderRadius: 24, alignItems: 'center' },
+  startBtnText: { color: '#000', fontSize: 16, fontWeight: '600' },
+  runningControls: { flexDirection: 'row', gap: 12 },
+  breakBtn: { flex: 1, backgroundColor: '#1a1a1a', padding: 16, borderRadius: 24, alignItems: 'center' },
+  breakBtnText: { color: '#fff', fontSize: 15, fontWeight: '500' },
+  stopBtn: { flex: 1, backgroundColor: '#1a1a1a', padding: 16, borderRadius: 24, alignItems: 'center' },
+  stopBtnFull: { flex: 1 },
+  stopBtnText: { color: '#ff4444', fontSize: 15, fontWeight: '500' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
+  pickerModal: { backgroundColor: '#1a1a1a', borderRadius: 20, padding: 20, width: '80%', maxWidth: 300 },
+  pickerTitle: { color: '#fff', fontSize: 18, fontWeight: '600', textAlign: 'center', marginBottom: 20 },
+  pickerContainer: { flexDirection: 'row', justifyContent: 'center', gap: 30, height: 180, marginBottom: 20 },
+  pickerColumn: { alignItems: 'center', width: 70 },
+  pickerLabelTop: { color: '#888', fontSize: 12, marginBottom: 10 },
+  pickerScroll: { alignItems: 'center', paddingVertical: 10 },
+  pickerItem: { padding: 8, minWidth: 50, alignItems: 'center', borderRadius: 8, marginVertical: 2 },
+  pickerItemSelected: { backgroundColor: '#fff' },
+  pickerText: { color: '#666', fontSize: 16 },
+  pickerTextSelected: { color: '#000', fontWeight: '600' },
+  pickerButtons: { flexDirection: 'row', gap: 10 },
+  cancelBtn: { flex: 1, padding: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#0a0a0a' },
+  cancelBtnText: { color: '#888', fontSize: 14, fontWeight: '500' },
+  setBtn: { flex: 2, padding: 12, borderRadius: 14, alignItems: 'center', backgroundColor: '#fff' },
+  setBtnText: { color: '#000', fontSize: 14, fontWeight: '600' },
+  breakModal: { backgroundColor: '#1a1a1a', borderRadius: 20, padding: 24, width: '80%', maxWidth: 300 },
+  breakModalTitle: { color: '#fff', fontSize: 18, fontWeight: '600', textAlign: 'center', marginBottom: 20 },
+  breakOptionBtn: { backgroundColor: '#0a0a0a', padding: 16, borderRadius: 14, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  breakOptionText: { color: '#fff', fontSize: 15, fontWeight: '500' },
+  breakOptionTime: { color: '#888', fontSize: 13 },
+  historyModal: { backgroundColor: '#1a1a1a', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '80%', width: '100%', position: 'absolute', bottom: 0 },
+  historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  historyTitle: { color: '#fff', fontSize: 22, fontWeight: '600' },
+  closeBtn: { color: '#888', fontSize: 28, fontWeight: '300' },
+  sessionList: {},
+  sessionItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a0a0a', padding: 16, borderRadius: 16, marginBottom: 8 },
+  sessionLeft: { flex: 1 },
+  sessionDate: { color: '#888', fontSize: 14 },
+  sessionRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sessionDuration: { color: '#fff', fontSize: 15, fontWeight: '500' },
+  completedBadge: { color: '#4cd964', fontSize: 16 },
+  emptyText: { color: '#555', textAlign: 'center', marginTop: 40, fontSize: 14 },
 });
-
 
 export default FocusTimer;

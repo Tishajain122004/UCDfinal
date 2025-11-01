@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const focusSessionController = require('../controllers/focusSessionController');
+const focusSessionController = require('../controllers/focusController');
 const verifyUser = require('../middleware/auth'); // Auth middleware
 
 // Sabhi routes protected hain
