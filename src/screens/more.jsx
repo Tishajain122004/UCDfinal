@@ -158,7 +158,9 @@ import {
   Pressable,
   StatusBar,
   Platform,
+  Alert // <-- 1. Import Alert
 } from "react-native";
+import { supabase } from '../config/supabaseClient'; // <-- 2. Import Supabase
 
 /**
  * Map keys → stack screen names
@@ -166,7 +168,7 @@ import {
 const screenMap = {
   "study-groups": "StudyGroups",
   analytics: "Analytics",
-  Journal: "Journal",
+  Journal: "Journal", // Note: Key is 'Journal' (capital J) in features array
   "study-tasks": "StudyTasks",
   whiteboard: "Whiteboard",
   leaderboard: "Leaderboard",
@@ -186,6 +188,36 @@ const features = [
 ];
 
 export default function More({ navigation }) {
+
+  // <-- 3. Create a handleLogout function -->
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            console.log("Logout pressed, signing out...");
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+              console.error("Error logging out:", error.message);
+              Alert.alert("Error", "Could not log out. Please try again.");
+            }
+            // No need to navigate here, the onAuthStateChanged
+            // listener in App.jsx will automatically switch screens.
+          }
+        }
+      ]
+    );
+  };
+  // <------------------------------------------->
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={styles.safe.backgroundColor} />
@@ -230,10 +262,7 @@ export default function More({ navigation }) {
         <View style={styles.logoutCard}>
           <Pressable
             style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-            onPress={() => {
-              console.log("Logout pressed");
-              // Example: navigation.replace('Login')
-            }}
+            onPress={handleLogout} // <-- 4. Call handleLogout
           >
             <View style={[styles.iconWrap, { backgroundColor: rgba("#E05555", 0.12) }]}>
               <Text style={[styles.iconText, { fontSize: 20 }]}>⤺</Text>
@@ -317,3 +346,4 @@ const styles = StyleSheet.create({
   chev: { color: "#6F6F76", fontSize: 20, marginLeft: 10 },
   logoutCard: { backgroundColor: "#0E0E10", borderRadius: 14, paddingVertical: 6, paddingHorizontal: 6 },
 });
+

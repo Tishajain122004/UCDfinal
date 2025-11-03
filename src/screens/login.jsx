@@ -75,7 +75,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 // ===============================================
 
 // Backend URL (Aapke SignUp file se copy kiya gaya)
-const BACKEND_URL = 'http://10.21.1.179:8001'; // <-- Yahaan apna IP daalein
+const BACKEND_URL = 'http://10.182.87.36:8001'; // <-- Yahaan apna IP daalein
 
 const Login = ({ navigation }) => { // <-- navigation prop ko receive karein
   const [email, setEmail] = useState('');

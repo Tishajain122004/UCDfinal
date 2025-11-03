@@ -140,7 +140,7 @@
 import { supabase } from '../config/supabaseClient';
 
 // ‼️ CHECK 1: Aapka IP address (Yeh sahi hai)
-const BACKEND_URL = 'http://10.21.1.179:8001';
+const BACKEND_URL = 'http://10.182.87.36:8001';
 
 // Helper function: Current user ka token nikaalne ke liye
 const getAuthToken = async () => {
