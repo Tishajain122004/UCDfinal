@@ -366,7 +366,7 @@ import { supabase } from '../config/supabaseClient';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 // =======================
 
-const BACKEND_URL = 'http://10.182.87.36:8001'; // <-- Yahaan apna IP daalein
+const BACKEND_URL = 'http://10.21.1.179:8001'; // <-- Yahaan apna IP daalein
 
 const SignUp = ({ navigation }) => {
   const [name, setName] = useState('');
