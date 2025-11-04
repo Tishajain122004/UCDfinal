@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabaseClient';
 
 // ‼️ IMPORTANT: Yahaan apna IP daalein (journalApi.js se copy kar lein)
-const BACKEND_URL = 'http://10.182.87.36:8001'; 
+const BACKEND_URL = 'https://ucdfinal1.onrender.com'; 
 
 // Helper function: Current user ka token nikaalne ke liye
 const getAuthToken = async () => {

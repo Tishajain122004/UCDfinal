@@ -34,19 +34,40 @@ class AppUsageModule(reactContext: ReactApplicationContext) :
             val usageStatsManager =
                 context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
-            // ⏰ use today's 00:00 as start
-            val cal = Calendar.getInstance().apply {
+            // Get the last 7 days of data (Monday to Sunday cycle)
+            val cal = Calendar.getInstance()
+            val today = cal.get(Calendar.DAY_OF_WEEK)
+            
+            // Calculate days back to Monday
+            val daysBackToMonday = if (today == Calendar.SUNDAY) 6 else today - Calendar.MONDAY
+            
+            // Set to Monday 00:00 of this week
+            cal.add(Calendar.DAY_OF_YEAR, -daysBackToMonday)
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            
+            val weekStartTime = cal.timeInMillis
+            val endTime = System.currentTimeMillis()
+
+            // Get today's start time for today's apps list
+            val todayCal = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
-            val startTime = cal.timeInMillis
-            val endTime = System.currentTimeMillis()
+            val todayStartTime = todayCal.timeInMillis
 
-            val events = usageStatsManager.queryEvents(startTime, endTime)
-            val usageMap = mutableMapOf<String, Long>()
-            val lastEventMap = mutableMapOf<String, Pair<Int, Long>>() // event type & timestamp
+            // Storage for daily usage: Map<DayIndex, Map<PackageName, TimeMs>>
+            val dailyUsageMap = mutableMapOf<Int, MutableMap<String, Long>>()
+            for (i in 0..6) {
+                dailyUsageMap[i] = mutableMapOf()
+            }
+
+            val events = usageStatsManager.queryEvents(weekStartTime, endTime)
+            val lastEventMap = mutableMapOf<String, Pair<Int, Long>>()
 
             val event = UsageEvents.Event()
             while (events.hasNextEvent()) {
@@ -55,29 +76,38 @@ class AppUsageModule(reactContext: ReactApplicationContext) :
                 val eventType = event.eventType
                 val timestamp = event.timeStamp
 
+                // Calculate which day this event belongs to (0=Monday, 6=Sunday)
+                val eventCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                val eventDayOfWeek = eventCal.get(Calendar.DAY_OF_WEEK)
+                val dayIndex = if (eventDayOfWeek == Calendar.SUNDAY) 6 else eventDayOfWeek - Calendar.MONDAY
+
                 when (eventType) {
                     UsageEvents.Event.ACTIVITY_RESUMED,
                     UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-                        // App came to foreground
                         lastEventMap[pkg] = Pair(eventType, timestamp)
                     }
 
                     UsageEvents.Event.ACTIVITY_PAUSED,
                     UsageEvents.Event.ACTIVITY_STOPPED,
                     UsageEvents.Event.MOVE_TO_BACKGROUND -> {
-                        // App went to background/paused
                         val lastEvent = lastEventMap[pkg]
                         if (lastEvent != null) {
                             val duration = timestamp - lastEvent.second
-                            if (duration > 0 && duration < 24 * 60 * 60 * 1000) { // sanity check: < 24 hours
-                                usageMap[pkg] = usageMap.getOrDefault(pkg, 0L) + duration
+                            if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
+                                // Add to the day where the session started
+                                val startCal = Calendar.getInstance().apply { timeInMillis = lastEvent.second }
+                                val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
+                                val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
+                                
+                                dailyUsageMap[startDayIndex]?.let { dayMap ->
+                                    dayMap[pkg] = dayMap.getOrDefault(pkg, 0L) + duration
+                                }
                             }
                         }
                         lastEventMap[pkg] = Pair(eventType, timestamp)
                     }
 
                     UsageEvents.Event.SCREEN_INTERACTIVE -> {
-                        // Screen turned on - resume any active app
                         for ((p, eventPair) in lastEventMap) {
                             if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
                                 lastEventMap[p] = Pair(UsageEvents.Event.ACTIVITY_RESUMED, timestamp)
@@ -86,12 +116,17 @@ class AppUsageModule(reactContext: ReactApplicationContext) :
                     }
 
                     UsageEvents.Event.SCREEN_NON_INTERACTIVE -> {
-                        // Screen turned off - calculate time for all active apps
                         for ((p, eventPair) in lastEventMap) {
                             if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
                                 val duration = timestamp - eventPair.second
                                 if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
-                                    usageMap[p] = usageMap.getOrDefault(p, 0L) + duration
+                                    val startCal = Calendar.getInstance().apply { timeInMillis = eventPair.second }
+                                    val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
+                                    val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
+                                    
+                                    dailyUsageMap[startDayIndex]?.let { dayMap ->
+                                        dayMap[p] = dayMap.getOrDefault(p, 0L) + duration
+                                    }
                                 }
                                 lastEventMap[p] = Pair(UsageEvents.Event.SCREEN_NON_INTERACTIVE, timestamp)
                             }
@@ -100,34 +135,49 @@ class AppUsageModule(reactContext: ReactApplicationContext) :
                 }
             }
 
-            // Handle apps still running (add time until now)
+            // Handle apps still running
             for ((pkg, eventPair) in lastEventMap) {
                 if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
                     val duration = endTime - eventPair.second
                     if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
-                        usageMap[pkg] = usageMap.getOrDefault(pkg, 0L) + duration
+                        val startCal = Calendar.getInstance().apply { timeInMillis = eventPair.second }
+                        val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
+                        val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
+                        
+                        dailyUsageMap[startDayIndex]?.let { dayMap ->
+                            dayMap[pkg] = dayMap.getOrDefault(pkg, 0L) + duration
+                        }
                     }
                 }
             }
+
+            // Calculate total time for each day
+            val weeklyData = Arguments.createArray()
+            for (i in 0..6) {
+                val dayTotal = dailyUsageMap[i]?.values?.sum() ?: 0L
+                weeklyData.pushDouble(dayTotal.toDouble())
+            }
+
+            // Get today's usage for app list
+            val todayDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+            val todayIndex = if (todayDayOfWeek == Calendar.SUNDAY) 6 else todayDayOfWeek - Calendar.MONDAY
+            val todayUsageMap = dailyUsageMap[todayIndex] ?: mutableMapOf()
 
             val pm = context.packageManager
             val result = Arguments.createArray()
             var totalTime = 0L
 
-            // Get all installed apps
             val installedApps = pm.getInstalledApplications(0)
             
             for (appInfo in installedApps) {
                 try {
                     val pkg = appInfo.packageName
                     
-                    // Skip system apps and apps without launch intent
                     if ((appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0) continue
                     if (pm.getLaunchIntentForPackage(pkg) == null) continue
                     
-                    val timeMs = usageMap[pkg] ?: 0L
+                    val timeMs = todayUsageMap[pkg] ?: 0L
                     
-                    // Include all apps, even with 0 usage
                     val name = pm.getApplicationLabel(appInfo).toString()
                     val iconUri = saveAppIcon(pm.getApplicationIcon(appInfo), pkg)
 
@@ -146,13 +196,13 @@ class AppUsageModule(reactContext: ReactApplicationContext) :
                 }
             }
 
-            Log.d("AppUsageModule", "Total apps: ${result.size()}, Total time: $totalTime ms (${formatTime(totalTime)})")
+            Log.d("AppUsageModule", "Total apps: ${result.size()}, Total time today: $totalTime ms (${formatTime(totalTime)})")
 
-            // Create response with total time and apps list
             val response = Arguments.createMap().apply {
                 putString("totalTime", formatTime(totalTime))
                 putDouble("totalTimeMs", totalTime.toDouble())
                 putArray("apps", result)
+                putArray("weeklyData", weeklyData) // Add weekly data for chart
             }
 
             promise.resolve(response)

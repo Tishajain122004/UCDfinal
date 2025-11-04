@@ -63,6 +63,7 @@ import TabNavigator from "./src/navigation/TabNavigator"; // <-- Aapka main app
 import SignUpScreen from './src/screens/SignUp';
 import LoginScreen from './src/screens/login'; // <-- Aapki login file
 import GetStartedScreen from './src/screens/GetStarted';
+import StudyTasks from './src/more/StudyTasks';
 
 const Stack = createNativeStackNavigator();
 
@@ -104,10 +105,11 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {session && session.user ? (
-          // User Logged In hai -> Main App (TabNavigator) dikhayein
-          <Stack.Screen name="MainApp" component={TabNavigator} />
+          <>
+            <Stack.Screen name="MainApp" component={TabNavigator} />
+            <Stack.Screen name="StudyTasks" component={StudyTasks} />
+          </>
         ) : (
-          // User Logged In nahi hai -> Auth screens dikhayein
           <>
             <Stack.Screen name="GetStarted" component={GetStartedScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -117,6 +119,7 @@ export default function App() {
       </Stack.Navigator>
     </NavigationContainer>
   );
+  
 }
 
 const styles = StyleSheet.create({

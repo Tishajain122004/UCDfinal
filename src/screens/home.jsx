@@ -18,6 +18,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useFocusEffect } from "@react-navigation/native";
 import { getAllTasks } from '../services/studyTaskApi';
+import StudyTasks from '../more/StudyTasks';
+
 
 export default function Home({ navigation }) {
   const [chatText, setChatText] = useState("");
@@ -137,7 +139,7 @@ export default function Home({ navigation }) {
             styles.goalsCard,
             pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
           ]}
-          onPress={() => navigation.navigate('Study Tasks')}
+          onPress={() => navigation.navigate('StudyTasks')}
         >
           {/* Gradient Background */}
           <View style={styles.cardGradient} />
@@ -182,7 +184,7 @@ export default function Home({ navigation }) {
                 </Text>
                 <Pressable 
                   style={styles.modernAddBtn}
-                  onPress={() => navigation.navigate('Study Tasks')}
+                  onPress={() => navigation.navigate('StudyTasks')}
                 >
                   <Icon name="plus-circle" size={18} color="#fff" />
                   <Text style={styles.modernAddBtnText}>Add New Task</Text>

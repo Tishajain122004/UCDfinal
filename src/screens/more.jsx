@@ -177,14 +177,14 @@ const screenMap = {
 };
 
 const features = [
-  { key: "study-groups", title: "Study Groups", subtitle: "Collaborate, chat, and focus together", icon: "👥" },
-  { key: "analytics", title: "Analytics", subtitle: "Track your progress and habits", icon: "📊" },
-  { key: "Journal", title: "Journal", subtitle: "Daily reflections and insights", icon: "📓" },
   { key: "study-tasks", title: "Study Tasks", subtitle: "Organize your tasks and goals", icon: "✅" },
+  { key: "study-groups", title: "Study Groups", subtitle: "Collaborate, chat, and focus together", icon: "👥" },
+  { key: "analytics", title: "Analytics Screen Stats", subtitle: "Track your progress and habits", icon: "📊" },
+  { key: "Journal", title: "Journal", subtitle: "Daily reflections and insights", icon: "📓" },
   { key: "whiteboard", title: "Whiteboard", subtitle: "Draw, brainstorm, and collaborate", icon: "🖊️" },
   { key: "leaderboard", title: "Leaderboard", subtitle: "See who's crushing their goals", icon: "🏆" },
   { key: "parental", title: "Parental Report", subtitle: "Share progress with parents", icon: "📄" },
-  { key: "settings", title: "Settings", subtitle: "Manage your account and preferences", icon: "⚙️" },
+  // { key: "settings", title: "Settings", subtitle: "Manage your account and preferences", icon: "⚙️" },
 ];
 
 export default function More({ navigation }) {

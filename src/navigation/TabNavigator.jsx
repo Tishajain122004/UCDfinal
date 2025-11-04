@@ -140,6 +140,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import Home from "../screens/home";       
 import FocusTimer from "../screens/FocusTimer"; 
 import BlockerPageRN from "../screens/BlockerPageRN";
+import Settings from '../more/Settings';
 import MoreStack from "../navigation/MoreStack"; // <- nested stack for More tab
 
 const Tab = createBottomTabNavigator();
@@ -183,7 +184,10 @@ export default function TabNavigator() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Focus Timer" component={FocusTimer} />
-      <Tab.Screen name="Blocks" component={BlockerPageRN} />
+      {/* <Tab.Screen name="Blocks" component={BlockerPageRN} /> */}
+      <Tab.Screen name="ScreenStats" component={Settings} />
+
+
       <Tab.Screen name="More" component={MoreStack} options={{ title: "More" }} />
     </Tab.Navigator>
   );

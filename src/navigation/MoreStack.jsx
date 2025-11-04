@@ -133,7 +133,7 @@ import StudyTasks from '../more/StudyTasks';
 import Whiteboard from '../more/Whiteboard';
 import Leaderboard from '../more/Leaderboard';
 import ParentalReport from '../more/ParentalReport';
-import Settings from '../more/Settings';
+// import Settings from '../more/Settings';
 
 // ## Nayi Screens ko yahan import karo ##
 import GroupChatScreen from '../screens/GroupChatScreen';
@@ -151,14 +151,14 @@ export default function MoreStack() {
     >
       {/* Existing Screens */}
       <Stack.Screen name="More" component={More} />
-      <Stack.Screen name="StudyGroups" component={StudyGroups} />
-      <Stack.Screen name="Analytics" component={Analytics} />
-      <Stack.Screen name="Journal" component={Journal} />
       <Stack.Screen name="StudyTasks" component={StudyTasks} />
+      <Stack.Screen name="StudyGroups" component={StudyGroups} />
+      {/* <Stack.Screen name="AppScreenUsage" component={Settings} /> */}
+      <Stack.Screen name="Journal" component={Journal} />
+      <Stack.Screen name="Analytics" component={Analytics} />
       <Stack.Screen name="Whiteboard" component={Whiteboard} />
       <Stack.Screen name="Leaderboard" component={Leaderboard} />
       <Stack.Screen name="ParentalReport" component={ParentalReport} />
-      <Stack.Screen name="Settings" component={Settings} />
 
       {/* ## Nayi Screens ko yahan add karo ## */}
       <Stack.Screen
