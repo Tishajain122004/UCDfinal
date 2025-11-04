@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const journalController = require('../controllers/journalController');
+const journalController = require('../controllers/JournalController');
 const verifyUser = require('../middleware/auth'); // Auth middleware
 
 // Sabhi routes protected hain
