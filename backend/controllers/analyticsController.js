@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const supabase = require('../config/supabaseClient');
 
 // Save today's analytics data
 exports.saveTodayAnalytics = async (req, res) => {
