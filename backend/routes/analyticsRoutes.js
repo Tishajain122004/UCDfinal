@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/auth');
 
 // Protect routes with auth middleware
 router.post('/today', authMiddleware, analyticsController.saveTodayAnalytics);
