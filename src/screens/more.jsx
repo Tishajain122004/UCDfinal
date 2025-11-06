@@ -171,7 +171,8 @@ const screenMap = {
   Journal: "Journal", // Note: Key is 'Journal' (capital J) in features array
   "study-tasks": "StudyTasks",
   whiteboard: "Whiteboard",
-  leaderboard: "Leaderboard",
+  // leaderboard: "Leaderboard",
+  Achievements: "Achievements",
   parental: "ParentalReport",
   settings: "Settings",
 };
@@ -182,7 +183,9 @@ const features = [
   { key: "analytics", title: "Analytics Screen Stats", subtitle: "Track your progress and habits", icon: "📊" },
   { key: "Journal", title: "Journal", subtitle: "Daily reflections and insights", icon: "📓" },
   { key: "whiteboard", title: "Whiteboard", subtitle: "Draw, brainstorm, and collaborate", icon: "🖊️" },
-  { key: "leaderboard", title: "Leaderboard", subtitle: "See who's crushing their goals", icon: "🏆" },
+  // { key: "leaderboard", title: "Leaderboard", subtitle: "See who's crushing their goals", icon: "🏆" },
+    { key: "Achievements", title: "Achievements", subtitle: "See who's crushing their goals", icon: "🏆" },
+
   { key: "parental", title: "Parental Report", subtitle: "Share progress with parents", icon: "📄" },
   // { key: "settings", title: "Settings", subtitle: "Manage your account and preferences", icon: "⚙️" },
 ];

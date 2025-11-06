@@ -131,7 +131,8 @@ import Analytics from '../more/Analytics';
 import Journal from '../more/Journal';
 import StudyTasks from '../more/StudyTasks';
 import Whiteboard from '../more/Whiteboard';
-import Leaderboard from '../more/Leaderboard';
+// import Leaderboard from '../more/Leaderboard';
+import Achievements from '../more/Achievements';
 import ParentalReport from '../more/ParentalReport';
 // import Settings from '../more/Settings';
 
@@ -157,7 +158,7 @@ export default function MoreStack() {
       <Stack.Screen name="Journal" component={Journal} />
       <Stack.Screen name="Analytics" component={Analytics} />
       <Stack.Screen name="Whiteboard" component={Whiteboard} />
-      <Stack.Screen name="Leaderboard" component={Leaderboard} />
+      <Stack.Screen name="Achievements" component={Achievements} />
       <Stack.Screen name="ParentalReport" component={ParentalReport} />
 
       {/* ## Nayi Screens ko yahan add karo ## */}
