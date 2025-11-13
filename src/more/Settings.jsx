@@ -1,6 +1,6 @@
-// import React, { useEffect, useState } from 'react';
-// import { saveTodayAnalytics } from '../services/analyticsApi'; // Add this import at top
 
+
+// import React, { useEffect, useState } from 'react';
 // import { 
 //   View, 
 //   Text, 
@@ -10,51 +10,47 @@
 //   ActivityIndicator,
 //   RefreshControl,
 //   Alert,
+//   Dimensions,
 // } from 'react-native';
 // import { BarChart } from 'react-native-chart-kit';
-// import { Dimensions } from 'react-native';
 // import { NativeModules } from 'react-native';
 // const { AppUsageModule } = NativeModules;
 
 // export default function Settings() {
 //   const [apps, setApps] = useState([]);
 //   const [totalTime, setTotalTime] = useState('0m');
-//   const [totalTimeMs, setTotalTimeMs] = useState(0);
-//   const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0, 0, 0, 0]);
+//   const [weeklyData, setWeeklyData] = useState([]);
 //   const [refreshing, setRefreshing] = useState(false);
 //   const [loading, setLoading] = useState(true);
 
 //   const loadData = async () => {
 //     setRefreshing(true);
 //     try {
-//       console.log('Calling AppUsageModule.getUsageStats()...');
+//       console.log('📱 Fetching usage data...');
       
 //       const result = await AppUsageModule.getUsageStats();
       
-//       console.log('Result received:', result);
+//       console.log('✅ Data received');
+//       console.log('Apps:', result?.apps?.length);
+//       console.log('Total:', result?.totalTime);
       
 //       if (result && result.apps) {
-//         const sortedApps = result.apps.sort((a, b) => b.timeMs - a.timeMs);
-        
-//         console.log('Sorted apps count:', sortedApps.length);
-//         console.log('Total time:', result.totalTime);
-//         console.log('Weekly data:', result.weeklyData);
+//         const sortedApps = result.apps
+//           .filter(app => app.timeMs > 0)
+//           .sort((a, b) => b.timeMs - a.timeMs);
         
 //         setApps(sortedApps);
 //         setTotalTime(result.totalTime || '0m');
-//         setTotalTimeMs(result.totalTimeMs || 0);
         
-//         // Set weekly data (Mon-Sun)
 //         if (result.weeklyData && result.weeklyData.length === 7) {
+//           console.log('📊 Weekly data received');
 //           setWeeklyData(result.weeklyData);
 //         }
-//       } else {
-//         console.error('Invalid result format:', result);
-//         Alert.alert('Error', 'Invalid data format received');
 //       }
+      
 //     } catch (err) {
-//       console.error('Error loading usage stats:', err);
-//       Alert.alert('Error', err.message || 'Failed to load usage stats');
+//       console.error('❌ Error:', err.message);
+//       Alert.alert('Error', err.message);
 //     } finally {
 //       setRefreshing(false);
 //       setLoading(false);
@@ -62,298 +58,152 @@
 //   };
 
 //   useEffect(() => {
-//     console.log('Component mounted, loading data...');
 //     loadData();
 //   }, []);
 
 //   const screenWidth = Dimensions.get('window').width;
-  
-//   // Prepare bar chart data for the week (Mon-Sun)
-//   const barData = {
-//     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+
+//   const chartData = {
+//     labels: weeklyData.map(d => d.label),
 //     datasets: [{
-//       data: weeklyData.map(ms => Math.max(0.1, ms / 60000)) // Convert to minutes
-//     }],
-//   };
-
-//   // Get current day index (0=Mon, 6=Sun)
-//   const getCurrentDayIndex = () => {
-//     const today = new Date().getDay();
-//     return today === 0 ? 6 : today - 1; // Convert Sun=0 to Sun=6
-//   };
-
-//   const getFormattedDate = () => {
-//     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-//     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-//     const date = new Date();
-//     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+//       data: weeklyData.length > 0 
+//         ? weeklyData.map(d => Math.max(d.timeMs / (1000 * 60 * 60), 0.1))
+//         : [0.1]
+//     }]
 //   };
 
 //   if (loading) {
 //     return (
-//       <View style={styles.loadingContainer}>
-//         <ActivityIndicator size="large" color="#4C7EFF" />
-//         <Text style={styles.loadingText}>Loading app usage data...</Text>
+//       <View style={styles.centered}>
+//         <ActivityIndicator size="large" color="#4285F4" />
 //       </View>
 //     );
 //   }
 
-//   const currentDayIndex = getCurrentDayIndex();
-
 //   return (
 //     <View style={styles.container}>
-//       <View style={styles.header}>
-//         <Text style={styles.title}>App activity details</Text>
-//       </View>
-
 //       <FlatList
-//         ListHeaderComponent={
-//           <>
-//             {/* Total Time Display */}
-//             <View style={styles.totalTimeContainer}>
-//               <Text style={styles.screenTimeLabel}>Screen time</Text>
-//               <Text style={styles.totalTime}>{totalTime}</Text>
-//               <Text style={styles.todayLabel}>Today</Text>
-//             </View>
-
-//             {/* Weekly Chart */}
-//             <View style={styles.chartContainer}>
-//               <BarChart
-//                 data={barData}
-//                 width={screenWidth - 40}
-//                 height={200}
-//                 fromZero
-//                 showValuesOnTopOfBars={false}
-//                 withInnerLines={true}
-//                 chartConfig={{
-//                   backgroundGradientFrom: '#fff',
-//                   backgroundGradientTo: '#fff',
-//                   color: (opacity = 1, index) => {
-//                     // Highlight current day with darker blue
-//                     return index === currentDayIndex ? '#4C7EFF' : `rgba(76, 126, 255, ${opacity * 0.4})`;
-//                   },
-//                   labelColor: () => '#888',
-//                   barPercentage: 0.7,
-//                   decimalPlaces: 0,
-//                   propsForBackgroundLines: {
-//                     strokeDasharray: '', // solid lines
-//                     stroke: '#e3e3e3',
-//                     strokeWidth: 1,
-//                   },
-//                 }}
-//                 style={styles.chart}
-//               />
-//               <View style={styles.weekDays}>
-//                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-//                   <Text 
-//                     key={day} 
-//                     style={[
-//                       styles.dayLabel,
-//                       index === currentDayIndex && styles.todayDayLabel
-//                     ]}
-//                   >
-//                     {day}
-//                   </Text>
-//                 ))}
-//               </View>
-//             </View>
-
-//             {/* Date Header */}
-//             <View style={styles.dateHeader}>
-//               <Text style={styles.dateText}>{getFormattedDate()}</Text>
-//             </View>
-//           </>
-//         }
 //         data={apps}
-//         keyExtractor={(item) => item.packageName}
+//         keyExtractor={(item, idx) => `${item.packageName}-${idx}`}
 //         refreshControl={
 //           <RefreshControl refreshing={refreshing} onRefresh={loadData} />
 //         }
+//         ListHeaderComponent={
+//           <>
+//             <View style={styles.timeHeader}>
+//               <Text style={styles.label}>Screen time</Text>
+//               <Text style={styles.bigTime}>{totalTime}</Text>
+//               <Text style={styles.subLabel}>Today</Text>
+//             </View>
+
+//             {weeklyData.length > 0 && (
+//               <View style={styles.chartSection}>
+//                 <BarChart
+//                   data={chartData}
+//                   width={screenWidth - 40}
+//                   height={200}
+//                   fromZero
+//                   showValuesOnTopOfBars={false}
+//                   withInnerLines={false}
+//                   chartConfig={{
+//                     backgroundColor: '#fff',
+//                     backgroundGradientFrom: '#fff',
+//                     backgroundGradientTo: '#fff',
+//                     color: (opacity = 1, index) => {
+//                       return weeklyData[index]?.isToday 
+//                         ? '#1a73e8' 
+//                         : `rgba(66, 133, 244, ${opacity * 0.4})`;
+//                     },
+//                     labelColor: () => '#666',
+//                     barPercentage: 0.5,
+//                     decimalPlaces: 0,
+//                   }}
+//                   style={styles.chart}
+//                 />
+                
+//                 <View style={styles.daysRow}>
+//                   {weeklyData.map((day, i) => (
+//                     <View key={i} style={styles.dayColumn}>
+//                       <Text style={[
+//                         styles.dayText,
+//                         day.isToday && styles.todayText
+//                       ]}>
+//                         {day.label}
+//                       </Text>
+//                       <Text style={styles.timeText}>
+//                         {day.timeFormatted}
+//                       </Text>
+//                     </View>
+//                   ))}
+//                 </View>
+//               </View>
+//             )}
+
+//             <View style={styles.dateLine}>
+//               <Text style={styles.dateText}>
+//                 {new Date().toLocaleDateString('en-US', {
+//                   weekday: 'short',
+//                   month: 'short',
+//                   day: 'numeric'
+//                 })}
+//               </Text>
+//             </View>
+//           </>
+//         }
 //         renderItem={({ item }) => (
-//           <View style={styles.card}>
+//           <View style={styles.appRow}>
 //             {item.iconUri ? (
-//               <Image 
-//                 source={{ uri: item.iconUri }} 
-//                 style={styles.icon}
-//                 onError={() => console.log('Icon load error for:', item.packageName)}
-//               />
+//               <Image source={{ uri: item.iconUri }} style={styles.appIcon} />
 //             ) : (
-//               <View style={[styles.icon, styles.iconPlaceholder]}>
-//                 <Text style={styles.iconPlaceholderText}>
-//                   {(item.appName || 'A')[0].toUpperCase()}
+//               <View style={[styles.appIcon, styles.iconPlaceholder]}>
+//                 <Text style={styles.iconLetter}>
+//                   {item.appName[0]?.toUpperCase() || '?'}
 //                 </Text>
 //               </View>
 //             )}
-//             <View style={styles.info}>
-//               <Text style={styles.appName}>{item.appName || item.packageName}</Text>
-//               <Text style={styles.time}>{item.timeFormatted || '0m'}</Text>
+            
+//             <View style={styles.appInfo}>
+//               <Text style={styles.appName} numberOfLines={1}>
+//                 {item.appName}
+//               </Text>
+//               <Text style={styles.appTime}>{item.timeFormatted}</Text>
 //             </View>
-//             <View style={styles.timerIcon}>
-//               <Text style={styles.timerText}>⏳</Text>
-//             </View>
+
+//             <Text style={styles.chevron}>›</Text>
 //           </View>
 //         )}
-//         ListEmptyComponent={
-//           <View style={styles.emptyContainer}>
-//             <Text style={styles.emptyText}>No app usage data available</Text>
-//             <Text style={styles.emptySubText}>Grant usage access permission to see your app activity</Text>
-//           </View>
-//         }
 //       />
 //     </View>
 //   );
 // }
 
 // const styles = StyleSheet.create({
-//   container: { 
-//     flex: 1, 
-//     backgroundColor: '#fff',
-//   },
-//   loadingContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: '#fff',
-//   },
-//   loadingText: {
-//     marginTop: 10,
-//     fontSize: 14,
-//     color: '#666',
-//   },
-//   header: {
-//     paddingHorizontal: 20,
-//     paddingTop: 20,
-//     paddingBottom: 10,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#f0f0f0',
-//   },
-//   title: { 
-//     fontSize: 22, 
-//     fontWeight: '600',
-//     color: '#000',
-//   },
-//   totalTimeContainer: {
-//     alignItems: 'center',
-//     paddingVertical: 30,
-//     backgroundColor: '#fafafa',
-//   },
-//   screenTimeLabel: {
-//     fontSize: 14,
-//     color: '#666',
-//     marginBottom: 10,
-//   },
-//   totalTime: {
-//     fontSize: 48,
-//     fontWeight: '300',
-//     color: '#000',
-//   },
-//   todayLabel: {
-//     fontSize: 14,
-//     color: '#999',
-//     marginTop: 5,
-//   },
-//   chartContainer: {
-//     paddingHorizontal: 20,
-//     paddingVertical: 20,
-//     backgroundColor: '#fff',
-//   },
-//   chart: { 
-//     borderRadius: 8,
-//     marginVertical: 8,
-//   },
-//   weekDays: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     marginTop: 10,
-//   },
-//   dayLabel: {
-//     fontSize: 12,
-//     color: '#999',
-//     width: 40,
-//     textAlign: 'center',
-//   },
-//   todayDayLabel: {
-//     color: '#4C7EFF',
-//     fontWeight: '600',
-//   },
-//   dateHeader: {
-//     paddingHorizontal: 20,
-//     paddingVertical: 15,
-//     backgroundColor: '#f9f9f9',
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#f0f0f0',
-//   },
-//   dateText: {
-//     fontSize: 16,
-//     fontWeight: '500',
-//     color: '#000',
-//   },
-//   card: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingVertical: 12,
-//     paddingHorizontal: 20,
-//     borderBottomWidth: 0.5,
-//     borderColor: '#f0f0f0',
-//     backgroundColor: '#fff',
-//   },
-//   icon: { 
-//     width: 48, 
-//     height: 48, 
-//     borderRadius: 12, 
-//     marginRight: 15,
-//   },
-//   iconPlaceholder: {
-//     backgroundColor: '#e0e0e0',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   iconPlaceholderText: {
-//     fontSize: 20,
-//     fontWeight: '600',
-//     color: '#666',
-//   },
-//   info: { 
-//     flex: 1,
-//   },
-//   appName: { 
-//     fontSize: 16, 
-//     fontWeight: '500',
-//     color: '#000',
-//     marginBottom: 4,
-//   },
-//   time: { 
-//     color: '#777', 
-//     fontSize: 14,
-//   },
-//   timerIcon: {
-//     padding: 5,
-//   },
-//   timerText: {
-//     fontSize: 20,
-//     opacity: 0.4,
-//   },
-//   emptyContainer: {
-//     padding: 40,
-//     alignItems: 'center',
-//   },
-//   emptyText: {
-//     fontSize: 16,
-//     fontWeight: '500',
-//     color: '#333',
-//     marginBottom: 8,
-//   },
-//   emptySubText: {
-//     fontSize: 14,
-//     color: '#666',
-//     textAlign: 'center',
-//   },
+//   container: { flex: 1, backgroundColor: '#fff' },
+//   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+//   timeHeader: { alignItems: 'center', paddingVertical: 40, backgroundColor: '#fafafa' },
+//   label: { fontSize: 14, color: '#666', marginBottom: 8 },
+//   bigTime: { fontSize: 52, fontWeight: '300', color: '#000' },
+//   subLabel: { fontSize: 14, color: '#999', marginTop: 4 },
+//   chartSection: { paddingTop: 20, paddingHorizontal: 20, backgroundColor: '#fff' },
+//   chart: { marginVertical: 8 },
+//   daysRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 12, marginBottom: 20 },
+//   dayColumn: { alignItems: 'center', width: 45 },
+//   dayText: { fontSize: 12, color: '#999', marginBottom: 4 },
+//   todayText: { color: '#1a73e8', fontWeight: '600' },
+//   timeText: { fontSize: 11, color: '#666' },
+//   dateLine: { paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#f0f0f0', backgroundColor: '#fafafa' },
+//   dateText: { fontSize: 15, fontWeight: '500', color: '#000' },
+//   appRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+//   appIcon: { width: 40, height: 40, borderRadius: 10, marginRight: 16 },
+//   iconPlaceholder: { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
+//   iconLetter: { fontSize: 18, fontWeight: '600', color: '#666' },
+//   appInfo: { flex: 1 },
+//   appName: { fontSize: 16, color: '#000', marginBottom: 3 },
+//   appTime: { fontSize: 14, color: '#666' },
+//   chevron: { fontSize: 24, color: '#ccc' },
 // });
 
-
 import React, { useEffect, useState } from 'react';
-import { saveTodayAnalytics } from '../services/analyticsApi';
-
 import { 
   View, 
   Text, 
@@ -363,441 +213,298 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 import { NativeModules } from 'react-native';
+import { saveTodayAnalytics, checkTodayDataSaved, markTodayAsSaved } from '../services/analyticsService';
+
 const { AppUsageModule } = NativeModules;
 
 export default function Settings() {
   const [apps, setApps] = useState([]);
   const [totalTime, setTotalTime] = useState('0m');
-  const [totalTimeMs, setTotalTimeMs] = useState(0);
-  const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [weeklyData, setWeeklyData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState(''); // For debugging
+  const [syncStatus, setSyncStatus] = useState(''); // For user feedback
+
+  // ✅ Sync data to backend
+  const syncToBackend = async (usageData) => {
+    try {
+      // Check token EXACTLY like your study tasks do
+      const token = await AsyncStorage.getItem('authToken');
+      
+      console.log('=== SYNC DEBUG START ===');
+      console.log('Token exists?', token ? 'YES ✅' : 'NO ❌');
+      if (token) {
+        console.log('Token preview:', token.substring(0, 30) + '...');
+      }
+      console.log('========================');
+
+      if (!token) {
+        console.log('⚠️ No token - skipping sync');
+        setSyncStatus('Not synced');
+        return;
+      }
+
+      // Check if already synced
+      const alreadySaved = await checkTodayDataSaved();
+      if (alreadySaved) {
+        console.log('ℹ️ Already synced today');
+        setSyncStatus('✓ Synced');
+        return;
+      }
+
+      // Prepare data
+      const appsData = usageData.apps.map(app => ({
+        packageName: app.packageName,
+        appName: app.appName,
+        timeMs: app.timeMs,
+        timeFormatted: app.timeFormatted
+      }));
+
+      const totalMs = usageData.apps.reduce((sum, app) => sum + app.timeMs, 0);
+
+      console.log('🔄 Starting sync...');
+      console.log('Total screen time (ms):', totalMs);
+      console.log('Number of apps:', appsData.length);
+      
+      setSyncStatus('Syncing...');
+
+      await saveTodayAnalytics({
+        totalScreenTime: totalMs,
+        apps: appsData
+      });
+      
+      await markTodayAsSaved();
+      setSyncStatus('✓ Synced');
+      console.log('✅ Sync completed!');
+
+    } catch (error) {
+      console.error('❌ SYNC FAILED:', error.message);
+      console.error('Error details:', error.response?.data || error);
+      
+      setSyncStatus('✗ Failed');
+      
+      // Show what went wrong
+      Alert.alert(
+        'Sync Failed', 
+        `Error: ${error.response?.data?.message || error.message}\n\nCheck console for details.`
+      );
+    }
+  };
 
   const loadData = async () => {
     setRefreshing(true);
     try {
-      console.log('📱 Calling AppUsageModule.getUsageStats()...');
+      console.log('📱 Fetching usage data...');
       
       const result = await AppUsageModule.getUsageStats();
       
-      console.log('✅ Result received:', JSON.stringify(result, null, 2));
+      console.log('✅ Data received');
+      console.log('Apps:', result?.apps?.length);
+      console.log('Total:', result?.totalTime);
       
       if (result && result.apps) {
-        // Sort apps by time (handle both timeMs and totalTimeInForeground)
         const sortedApps = result.apps
-          .map(app => ({
-            ...app,
-            // Normalize the time field
-            timeMs: app.timeMs || app.totalTimeInForeground || 0,
-            timeFormatted: app.timeFormatted || formatTime(app.timeMs || app.totalTimeInForeground || 0),
-            appName: app.appName || app.packageName.split('.').pop() // Fallback for app name
-          }))
-          .filter(app => app.timeMs > 0) // Filter out apps with 0 usage
+          .filter(app => app.timeMs > 0)
           .sort((a, b) => b.timeMs - a.timeMs);
         
-        console.log(`📊 Sorted apps count: ${sortedApps.length}`);
-        console.log('🔝 Top 5 apps:', sortedApps.slice(0, 5).map(a => `${a.appName}: ${a.timeFormatted}`));
-        
         setApps(sortedApps);
+        setTotalTime(result.totalTime || '0m');
         
-        // Handle total time
-        const totalMs = result.totalTimeMs || result.totalScreenTime || 0;
-        setTotalTimeMs(totalMs);
-        setTotalTime(result.totalTime || formatTime(totalMs));
-        
-        // Set weekly data (Mon-Sun)
         if (result.weeklyData && result.weeklyData.length === 7) {
+          console.log('📊 Weekly data received');
           setWeeklyData(result.weeklyData);
         }
 
-        // 🔥 SAVE TO DATABASE - Only if we have valid data
-        if (sortedApps.length > 0 && totalMs > 0) {
-          try {
-            setSaveStatus('Saving...');
-            console.log('💾 Attempting to save analytics...');
-            
-            const analyticsPayload = {
-              totalScreenTime: totalMs,
-              apps: sortedApps.map(app => ({
-                packageName: app.packageName,
-                appName: app.appName,
-                totalTimeInForeground: app.timeMs,
-                timeFormatted: app.timeFormatted,
-                iconUri: app.iconUri || null
-              }))
-            };
-
-            console.log('📤 Payload:', JSON.stringify(analyticsPayload, null, 2));
-
-            const saveResult = await saveTodayAnalytics(analyticsPayload);
-            
-            console.log('✅ Analytics saved successfully:', saveResult);
-            setSaveStatus('✓ Saved');
-            
-            // Clear status after 2 seconds
-            setTimeout(() => setSaveStatus(''), 2000);
-            
-          } catch (saveError) {
-            console.error('❌ Analytics save failed:', saveError);
-            setSaveStatus('⚠ Save failed');
-            
-            // Show detailed error in debug mode
-            if (__DEV__) {
-              console.error('Save error details:', {
-                message: saveError.message,
-                response: saveError.response?.data,
-                status: saveError.response?.status
-              });
-            }
-            
-            // Don't block UI - clear status after 3 seconds
-            setTimeout(() => setSaveStatus(''), 3000);
-          }
-        } else {
-          console.warn('⚠️ No valid data to save (apps:', sortedApps.length, 'totalMs:', totalMs, ')');
+        // ✅ Auto-sync to backend
+        if (sortedApps.length > 0) {
+          await syncToBackend({ apps: sortedApps });
         }
-        
-      } else {
-        console.error('❌ Invalid result format:', result);
-        Alert.alert('Error', 'Invalid data format received');
       }
+      
     } catch (err) {
-      console.error('💥 Error loading usage stats:', err);
-      Alert.alert('Error', err.message || 'Failed to load usage stats');
+      console.error('❌ Error:', err.message);
+      Alert.alert('Error', err.message);
     } finally {
       setRefreshing(false);
       setLoading(false);
     }
   };
 
-  // Helper function to format time
-  const formatTime = (ms) => {
-    if (!ms || ms === 0) return '0m';
-    
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) {
-      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-    }
-    return `${minutes}m`;
-  };
-
   useEffect(() => {
-    console.log('🚀 Component mounted, loading data...');
     loadData();
+    
+    // ✅ Smart sync: Only once per day, not every 30 minutes
+    // Data will sync automatically when user opens the app
+    // No need for interval polling
   }, []);
 
   const screenWidth = Dimensions.get('window').width;
-  
-  // Prepare bar chart data for the week (Mon-Sun)
-  const barData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+
+  const chartData = {
+    labels: weeklyData.map(d => d.label),
     datasets: [{
-      data: weeklyData.map(ms => Math.max(0.1, ms / 60000)) // Convert to minutes, min 0.1 to show bar
-    }],
-  };
-
-  // Get current day index (0=Mon, 6=Sun)
-  const getCurrentDayIndex = () => {
-    const today = new Date().getDay();
-    return today === 0 ? 6 : today - 1; // Convert Sun=0 to Sun=6
-  };
-
-  const getFormattedDate = () => {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const date = new Date();
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+      data: weeklyData.length > 0 
+        ? weeklyData.map(d => Math.max(d.timeMs / (1000 * 60 * 60), 0.1))
+        : [0.1]
+    }]
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4C7EFF" />
-        <Text style={styles.loadingText}>Loading app usage data...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#4285F4" />
+        <Text style={styles.loadingText}>Loading screen time...</Text>
       </View>
     );
   }
 
-  const currentDayIndex = getCurrentDayIndex();
-
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>App activity details</Text>
-        {/* Debug: Show save status */}
-        {saveStatus !== '' && (
-          <Text style={styles.saveStatus}>{saveStatus}</Text>
-        )}
-      </View>
-
       <FlatList
-        ListHeaderComponent={
-          <>
-            {/* Total Time Display */}
-            <View style={styles.totalTimeContainer}>
-              <Text style={styles.screenTimeLabel}>Screen time</Text>
-              <Text style={styles.totalTime}>{totalTime}</Text>
-              <Text style={styles.todayLabel}>
-                Today · {totalTimeMs > 0 ? `${Math.floor(totalTimeMs / 60000)} minutes` : '0 minutes'}
-              </Text>
-            </View>
-
-            {/* Weekly Chart */}
-            <View style={styles.chartContainer}>
-              <BarChart
-                data={barData}
-                width={screenWidth - 40}
-                height={200}
-                fromZero
-                showValuesOnTopOfBars={false}
-                withInnerLines={true}
-                chartConfig={{
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
-                  color: (opacity = 1, index) => {
-                    return index === currentDayIndex ? '#4C7EFF' : `rgba(76, 126, 255, ${opacity * 0.4})`;
-                  },
-                  labelColor: () => '#888',
-                  barPercentage: 0.7,
-                  decimalPlaces: 0,
-                  propsForBackgroundLines: {
-                    strokeDasharray: '',
-                    stroke: '#e3e3e3',
-                    strokeWidth: 1,
-                  },
-                }}
-                style={styles.chart}
-              />
-              <View style={styles.weekDays}>
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                  <Text 
-                    key={day} 
-                    style={[
-                      styles.dayLabel,
-                      index === currentDayIndex && styles.todayDayLabel
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                ))}
-              </View>
-            </View>
-
-            {/* Date Header */}
-            <View style={styles.dateHeader}>
-              <Text style={styles.dateText}>{getFormattedDate()}</Text>
-              <Text style={styles.appCount}>{apps.length} apps used</Text>
-            </View>
-          </>
-        }
         data={apps}
-        keyExtractor={(item, index) => `${item.packageName}-${index}`}
+        keyExtractor={(item, idx) => `${item.packageName}-${idx}`}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={loadData} />
         }
+        ListHeaderComponent={
+          <>
+            <View style={styles.timeHeader}>
+              <Text style={styles.label}>Screen time</Text>
+              <Text style={styles.bigTime}>{totalTime}</Text>
+              <Text style={styles.subLabel}>Today</Text>
+              
+              {/* Sync Status Indicator */}
+              {syncStatus && (
+                <Text style={[
+                  styles.syncStatus,
+                  syncStatus.includes('✓') && styles.syncSuccess,
+                  syncStatus.includes('✗') && styles.syncError
+                ]}>
+                  {syncStatus}
+                </Text>
+              )}
+            </View>
+
+            {weeklyData.length > 0 && (
+              <View style={styles.chartSection}>
+                <BarChart
+                  data={chartData}
+                  width={screenWidth - 40}
+                  height={200}
+                  fromZero
+                  showValuesOnTopOfBars={false}
+                  withInnerLines={false}
+                  chartConfig={{
+                    backgroundColor: '#fff',
+                    backgroundGradientFrom: '#fff',
+                    backgroundGradientTo: '#fff',
+                    color: (opacity = 1, index) => {
+                      return weeklyData[index]?.isToday 
+                        ? '#1a73e8' 
+                        : `rgba(66, 133, 244, ${opacity * 0.4})`;
+                    },
+                    labelColor: () => '#666',
+                    barPercentage: 0.5,
+                    decimalPlaces: 0,
+                  }}
+                  style={styles.chart}
+                />
+                
+                <View style={styles.daysRow}>
+                  {weeklyData.map((day, i) => (
+                    <View key={i} style={styles.dayColumn}>
+                      <Text style={[
+                        styles.dayText,
+                        day.isToday && styles.todayText
+                      ]}>
+                        {day.label}
+                      </Text>
+                      <Text style={styles.timeText}>
+                        {day.timeFormatted}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            <View style={styles.dateLine}>
+              <Text style={styles.dateText}>
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </Text>
+            </View>
+          </>
+        }
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <View style={styles.appRow}>
             {item.iconUri ? (
-              <Image 
-                source={{ uri: item.iconUri }} 
-                style={styles.icon}
-                onError={(e) => {
-                  console.log('Icon load error for:', item.packageName, e.nativeEvent.error);
-                }}
-              />
+              <Image source={{ uri: item.iconUri }} style={styles.appIcon} />
             ) : (
-              <View style={[styles.icon, styles.iconPlaceholder]}>
-                <Text style={styles.iconPlaceholderText}>
-                  {(item.appName || 'A')[0].toUpperCase()}
+              <View style={[styles.appIcon, styles.iconPlaceholder]}>
+                <Text style={styles.iconLetter}>
+                  {item.appName[0]?.toUpperCase() || '?'}
                 </Text>
               </View>
             )}
-            <View style={styles.info}>
+            
+            <View style={styles.appInfo}>
               <Text style={styles.appName} numberOfLines={1}>
-                {item.appName || item.packageName}
+                {item.appName}
               </Text>
-              <Text style={styles.time}>{item.timeFormatted || '0m'}</Text>
+              <Text style={styles.appTime}>{item.timeFormatted}</Text>
             </View>
-            <View style={styles.timerIcon}>
-              <Text style={styles.timerText}>⏳</Text>
-            </View>
+
+            <Text style={styles.chevron}>›</Text>
           </View>
         )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No app usage data available</Text>
-            <Text style={styles.emptySubText}>Grant usage access permission to see your app activity</Text>
-          </View>
-        }
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#fff',
+  container: { flex: 1, backgroundColor: '#fff' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12, fontSize: 14, color: '#666' },
+  timeHeader: { alignItems: 'center', paddingVertical: 40, backgroundColor: '#fafafa' },
+  label: { fontSize: 14, color: '#666', marginBottom: 8 },
+  bigTime: { fontSize: 52, fontWeight: '300', color: '#000' },
+  subLabel: { fontSize: 14, color: '#999', marginTop: 4 },
+  syncStatus: { 
+    fontSize: 12, 
+    color: '#666', 
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0'
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: { 
-    fontSize: 22, 
-    fontWeight: '600',
-    color: '#000',
-  },
-  saveStatus: {
-    fontSize: 12,
-    color: '#4C7EFF',
-    fontWeight: '500',
-  },
-  totalTimeContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-    backgroundColor: '#fafafa',
-  },
-  screenTimeLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-  },
-  totalTime: {
-    fontSize: 48,
-    fontWeight: '300',
-    color: '#000',
-  },
-  todayLabel: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 5,
-  },
-  chartContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-  },
-  chart: { 
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  weekDays: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
-  },
-  dayLabel: {
-    fontSize: 12,
-    color: '#999',
-    width: 40,
-    textAlign: 'center',
-  },
-  todayDayLabel: {
-    color: '#4C7EFF',
-    fontWeight: '600',
-  },
-  dateHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#f9f9f9',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-  },
-  appCount: {
-    fontSize: 14,
-    color: '#666',
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 0.5,
-    borderColor: '#f0f0f0',
-    backgroundColor: '#fff',
-  },
-  icon: { 
-    width: 48, 
-    height: 48, 
-    borderRadius: 12, 
-    marginRight: 15,
-  },
-  iconPlaceholder: {
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconPlaceholderText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#666',
-  },
-  info: { 
-    flex: 1,
-  },
-  appName: { 
-    fontSize: 16, 
-    fontWeight: '500',
-    color: '#000',
-    marginBottom: 4,
-  },
-  time: { 
-    color: '#777', 
-    fontSize: 14,
-  },
-  timerIcon: {
-    padding: 5,
-  },
-  timerText: {
-    fontSize: 20,
-    opacity: 0.4,
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
+  syncSuccess: { color: '#0f9d58', backgroundColor: '#e6f4ea' },
+  syncError: { color: '#d93025', backgroundColor: '#fce8e6' },
+  chartSection: { paddingTop: 20, paddingHorizontal: 20, backgroundColor: '#fff' },
+  chart: { marginVertical: 8 },
+  daysRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 12, marginBottom: 20 },
+  dayColumn: { alignItems: 'center', width: 45 },
+  dayText: { fontSize: 12, color: '#999', marginBottom: 4 },
+  todayText: { color: '#1a73e8', fontWeight: '600' },
+  timeText: { fontSize: 11, color: '#666' },
+  dateLine: { paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#f0f0f0', backgroundColor: '#fafafa' },
+  dateText: { fontSize: 15, fontWeight: '500', color: '#000' },
+  appRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+  appIcon: { width: 40, height: 40, borderRadius: 10, marginRight: 16 },
+  iconPlaceholder: { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
+  iconLetter: { fontSize: 18, fontWeight: '600', color: '#666' },
+  appInfo: { flex: 1 },
+  appName: { fontSize: 16, color: '#000', marginBottom: 3 },
+  appTime: { fontSize: 14, color: '#666' },
+  chevron: { fontSize: 24, color: '#ccc' },
 });

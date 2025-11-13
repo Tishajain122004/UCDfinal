@@ -80,12 +80,12 @@ const GetStarted = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* 👇 New button for BlockerPageRN */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.button, styles.secondaryButton]}
         onPress={() => navigation.navigate("Bloked apps")}
       >
         <Text style={styles.buttonText}>Go to Blocker</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

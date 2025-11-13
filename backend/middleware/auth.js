@@ -2,7 +2,9 @@ const supabase = require('../config/supabaseClient');
 
 const verifyUser = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1]; // "Bearer <token>"
+    const token = req.headers.authorization?.split(' ')[1]; 
+    console.log("token",token);
+    // "Bearer <token>"
 
     if (!token) {
       return res.status(401).json({ message: 'Authentication token nahi mila' });

@@ -1,255 +1,216 @@
 package com.ucdmin
 
-import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.graphics.*
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Process
-import android.provider.Settings
+import android.util.Base64
 import android.util.Log
 import com.facebook.react.bridge.*
-import java.io.File
-import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
-class AppUsageModule(reactContext: ReactApplicationContext) :
+class AppUsageModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
-    private val context: Context = reactContext
-    override fun getName() = "AppUsageModule"
+
+    private val TAG = "AppUsageModule"
+
+    override fun getName(): String = "AppUsageModule"
 
     @ReactMethod
     fun getUsageStats(promise: Promise) {
         try {
-            if (!hasUsagePermission()) {
-                openUsageAccessSettings()
-                promise.reject("PERMISSION_DENIED", "Usage access not granted")
-                return
-            }
-
             val usageStatsManager =
-                context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                reactContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val pm = reactContext.packageManager
 
-            // Get the last 7 days of data (Monday to Sunday cycle)
-            val cal = Calendar.getInstance()
-            val today = cal.get(Calendar.DAY_OF_WEEK)
-            
-            // Calculate days back to Monday
-            val daysBackToMonday = if (today == Calendar.SUNDAY) 6 else today - Calendar.MONDAY
-            
-            // Set to Monday 00:00 of this week
-            cal.add(Calendar.DAY_OF_YEAR, -daysBackToMonday)
-            cal.set(Calendar.HOUR_OF_DAY, 0)
-            cal.set(Calendar.MINUTE, 0)
-            cal.set(Calendar.SECOND, 0)
-            cal.set(Calendar.MILLISECOND, 0)
-            
-            val weekStartTime = cal.timeInMillis
-            val endTime = System.currentTimeMillis()
+            val calendar = Calendar.getInstance()
+            val now = System.currentTimeMillis()
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfToday = calendar.timeInMillis
 
-            // Get today's start time for today's apps list
-            val todayCal = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val todayStartTime = todayCal.timeInMillis
+            // ✅ Calculate TODAY usage using UsageEvents for accurate visible time
+            val todayDurations = calculateAppUsage(usageStatsManager, startOfToday, now)
+            val userAppHints = listOf(
+                "youtube", "chrome", "maps", "gmail", "instagram",
+                "whatsapp", "facebook", "twitter", "x", "snapchat",
+                "telegram", "netflix", "spotify", "amazon", "flipkart", "paytm"
+            )
 
-            // Storage for daily usage: Map<DayIndex, Map<PackageName, TimeMs>>
-            val dailyUsageMap = mutableMapOf<Int, MutableMap<String, Long>>()
-            for (i in 0..6) {
-                dailyUsageMap[i] = mutableMapOf()
-            }
+            val appsArray = Arguments.createArray()
+            var totalToday = 0L
 
-            val events = usageStatsManager.queryEvents(weekStartTime, endTime)
-            val lastEventMap = mutableMapOf<String, Pair<Int, Long>>()
+            todayDurations.entries
+                .filter { it.value >= 1000 }
+                .sortedByDescending { it.value }
+                .forEach { (pkg, duration) ->
+                    try {
+                        val ai = pm.getApplicationInfo(pkg, 0)
+                        val hasLauncher = pm.getLaunchIntentForPackage(pkg) != null
+                        val isSystem = (ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                        val include = hasLauncher || userAppHints.any { pkg.contains(it, true) }
+                        if (!include) return@forEach
 
-            val event = UsageEvents.Event()
-            while (events.hasNextEvent()) {
-                events.getNextEvent(event)
-                val pkg = event.packageName ?: continue
-                val eventType = event.eventType
-                val timestamp = event.timeStamp
+                        val appName = pm.getApplicationLabel(ai).toString()
+                        val map = Arguments.createMap()
+                        map.putString("packageName", pkg)
+                        map.putString("appName", appName)
+                        map.putDouble("timeMs", duration.toDouble())
+                        map.putString("timeFormatted", formatTime(duration))
 
-                // Calculate which day this event belongs to (0=Monday, 6=Sunday)
-                val eventCal = Calendar.getInstance().apply { timeInMillis = timestamp }
-                val eventDayOfWeek = eventCal.get(Calendar.DAY_OF_WEEK)
-                val dayIndex = if (eventDayOfWeek == Calendar.SUNDAY) 6 else eventDayOfWeek - Calendar.MONDAY
-
-                when (eventType) {
-                    UsageEvents.Event.ACTIVITY_RESUMED,
-                    UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-                        lastEventMap[pkg] = Pair(eventType, timestamp)
-                    }
-
-                    UsageEvents.Event.ACTIVITY_PAUSED,
-                    UsageEvents.Event.ACTIVITY_STOPPED,
-                    UsageEvents.Event.MOVE_TO_BACKGROUND -> {
-                        val lastEvent = lastEventMap[pkg]
-                        if (lastEvent != null) {
-                            val duration = timestamp - lastEvent.second
-                            if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
-                                // Add to the day where the session started
-                                val startCal = Calendar.getInstance().apply { timeInMillis = lastEvent.second }
-                                val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
-                                val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
-                                
-                                dailyUsageMap[startDayIndex]?.let { dayMap ->
-                                    dayMap[pkg] = dayMap.getOrDefault(pkg, 0L) + duration
-                                }
-                            }
+                        try {
+                            val icon = pm.getApplicationIcon(pkg)
+                            map.putString("iconUri", "data:image/png;base64,${drawableToBase64(icon)}")
+                        } catch (_: Exception) {
+                            map.putString("iconUri", null)
                         }
-                        lastEventMap[pkg] = Pair(eventType, timestamp)
-                    }
 
-                    UsageEvents.Event.SCREEN_INTERACTIVE -> {
-                        for ((p, eventPair) in lastEventMap) {
-                            if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
-                                lastEventMap[p] = Pair(UsageEvents.Event.ACTIVITY_RESUMED, timestamp)
-                            }
-                        }
-                    }
-
-                    UsageEvents.Event.SCREEN_NON_INTERACTIVE -> {
-                        for ((p, eventPair) in lastEventMap) {
-                            if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
-                                val duration = timestamp - eventPair.second
-                                if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
-                                    val startCal = Calendar.getInstance().apply { timeInMillis = eventPair.second }
-                                    val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
-                                    val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
-                                    
-                                    dailyUsageMap[startDayIndex]?.let { dayMap ->
-                                        dayMap[p] = dayMap.getOrDefault(p, 0L) + duration
-                                    }
-                                }
-                                lastEventMap[p] = Pair(UsageEvents.Event.SCREEN_NON_INTERACTIVE, timestamp)
-                            }
-                        }
-                    }
+                        appsArray.pushMap(map)
+                        totalToday += duration
+                    } catch (_: Exception) {}
                 }
-            }
 
-            // Handle apps still running
-            for ((pkg, eventPair) in lastEventMap) {
-                if (eventPair.first == UsageEvents.Event.ACTIVITY_RESUMED) {
-                    val duration = endTime - eventPair.second
-                    if (duration > 0 && duration < 24 * 60 * 60 * 1000) {
-                        val startCal = Calendar.getInstance().apply { timeInMillis = eventPair.second }
-                        val startDayOfWeek = startCal.get(Calendar.DAY_OF_WEEK)
-                        val startDayIndex = if (startDayOfWeek == Calendar.SUNDAY) 6 else startDayOfWeek - Calendar.MONDAY
-                        
-                        dailyUsageMap[startDayIndex]?.let { dayMap ->
-                            dayMap[pkg] = dayMap.getOrDefault(pkg, 0L) + duration
-                        }
+            // ✅ Last 7 days using same event-based logic
+            val weeklyArray = Arguments.createArray()
+            val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val dayFmt = SimpleDateFormat("EEE", Locale.getDefault())
+
+            for (i in 6 downTo 0) {
+                val cal = Calendar.getInstance()
+                cal.add(Calendar.DAY_OF_YEAR, -i)
+                cal.set(Calendar.HOUR_OF_DAY, 0)
+                cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val start = cal.timeInMillis
+
+                val endCal = cal.clone() as Calendar
+                endCal.set(Calendar.HOUR_OF_DAY, 23)
+                endCal.set(Calendar.MINUTE, 59)
+                endCal.set(Calendar.SECOND, 59)
+                endCal.set(Calendar.MILLISECOND, 999)
+                val end = if (i == 0) now else endCal.timeInMillis
+
+                val dayDurations = calculateAppUsage(usageStatsManager, start, end)
+                var totalDay = 0L
+                val appsForDay = Arguments.createArray()
+
+                dayDurations.entries
+                    .filter { it.value >= 1000 }
+                    .sortedByDescending { it.value }
+                    .forEach { (pkg, dur) ->
+                        try {
+                            val ai = pm.getApplicationInfo(pkg, 0)
+                            val hasLauncher = pm.getLaunchIntentForPackage(pkg) != null
+                            val isSystem = (ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                            val include = hasLauncher || userAppHints.any { pkg.contains(it, true) }
+                            if (!include) return@forEach
+
+                            val appName = pm.getApplicationLabel(ai).toString()
+                            val appMap = Arguments.createMap()
+                            appMap.putString("packageName", pkg)
+                            appMap.putString("appName", appName)
+                            appMap.putDouble("timeMs", dur.toDouble())
+                            appMap.putString("timeFormatted", formatTime(dur))
+                            appsForDay.pushMap(appMap)
+                            totalDay += dur
+                        } catch (_: Exception) {}
                     }
-                }
+
+                val map = Arguments.createMap()
+                map.putString("date", dateFmt.format(Date(start)))
+                map.putString("label", dayFmt.format(Date(start)))
+                map.putDouble("timeMs", totalDay.toDouble())
+                map.putString("timeFormatted", formatTime(totalDay))
+                map.putBoolean("isToday", i == 0)
+                map.putArray("apps", appsForDay)
+                weeklyArray.pushMap(map)
             }
 
-            // Calculate total time for each day
-            val weeklyData = Arguments.createArray()
-            for (i in 0..6) {
-                val dayTotal = dailyUsageMap[i]?.values?.sum() ?: 0L
-                weeklyData.pushDouble(dayTotal.toDouble())
-            }
-
-            // Get today's usage for app list
-            val todayDayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-            val todayIndex = if (todayDayOfWeek == Calendar.SUNDAY) 6 else todayDayOfWeek - Calendar.MONDAY
-            val todayUsageMap = dailyUsageMap[todayIndex] ?: mutableMapOf()
-
-            val pm = context.packageManager
-            val result = Arguments.createArray()
-            var totalTime = 0L
-
-            val installedApps = pm.getInstalledApplications(0)
-            
-            for (appInfo in installedApps) {
-                try {
-                    val pkg = appInfo.packageName
-                    
-                    if ((appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0) continue
-                    if (pm.getLaunchIntentForPackage(pkg) == null) continue
-                    
-                    val timeMs = todayUsageMap[pkg] ?: 0L
-                    
-                    val name = pm.getApplicationLabel(appInfo).toString()
-                    val iconUri = saveAppIcon(pm.getApplicationIcon(appInfo), pkg)
-
-                    val map = Arguments.createMap().apply {
-                        putString("appName", name)
-                        putString("packageName", pkg)
-                        putString("iconUri", iconUri)
-                        putString("timeFormatted", formatTime(timeMs))
-                        putDouble("timeMs", timeMs.toDouble())
-                    }
-                    result.pushMap(map)
-                    
-                    totalTime += timeMs
-                } catch (e: Exception) {
-                    Log.w("AppUsageModule", "Error loading ${appInfo.packageName}: ${e.message}")
-                }
-            }
-
-            Log.d("AppUsageModule", "Total apps: ${result.size()}, Total time today: $totalTime ms (${formatTime(totalTime)})")
-
-            val response = Arguments.createMap().apply {
-                putString("totalTime", formatTime(totalTime))
-                putDouble("totalTimeMs", totalTime.toDouble())
-                putArray("apps", result)
-                putArray("weeklyData", weeklyData) // Add weekly data for chart
-            }
+            // ✅ Build response
+            val response = Arguments.createMap()
+            response.putArray("apps", appsArray)
+            response.putDouble("totalTimeMs", totalToday.toDouble())
+            response.putDouble("totalScreenTime", totalToday.toDouble())
+            response.putString("totalTime", formatTime(totalToday))
+            response.putArray("weeklyData", weeklyArray)
 
             promise.resolve(response)
         } catch (e: Exception) {
-            Log.e("AppUsageModule", "Error fetching usage", e)
-            promise.reject("ERROR", e)
+            Log.e(TAG, "❌ Error: ${e.message}", e)
+            promise.reject("ERR", e.message, e)
         }
     }
 
-    private fun hasUsagePermission(): Boolean {
-        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow("android:get_usage_stats", Process.myUid(), context.packageName)
-        return mode == AppOpsManager.MODE_ALLOWED
-    }
+    /**
+     * Uses UsageEvents for exact foreground timing.
+     * Avoids duplicates from UsageStatsManager aggregation.
+     */
+    private fun calculateAppUsage(manager: UsageStatsManager, start: Long, end: Long): Map<String, Long> {
+        val map = mutableMapOf<String, Long>()
+        val resumed = mutableMapOf<String, Long>()
 
-    private fun openUsageAccessSettings() {
-        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-    }
-
-    private fun saveAppIcon(icon: Drawable, pkg: String): String {
-        return try {
-            val bitmap = if (icon is BitmapDrawable) icon.bitmap else {
-                val bmp = Bitmap.createBitmap(
-                    icon.intrinsicWidth.coerceAtLeast(1),
-                    icon.intrinsicHeight.coerceAtLeast(1),
-                    Bitmap.Config.ARGB_8888
-                )
-                val canvas = Canvas(bmp)
-                icon.setBounds(0, 0, canvas.width, canvas.height)
-                icon.draw(canvas)
-                bmp
+        try {
+            val events = manager.queryEvents(start, end)
+            val event = UsageEvents.Event()
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event)
+                when (event.eventType) {
+                    UsageEvents.Event.ACTIVITY_RESUMED -> resumed[event.packageName] = event.timeStamp
+                    UsageEvents.Event.ACTIVITY_PAUSED -> {
+                        val startTime = resumed[event.packageName] ?: 0L
+                        if (startTime > 0 && event.timeStamp > startTime) {
+                            val dur = event.timeStamp - startTime
+                            map[event.packageName] = (map[event.packageName] ?: 0L) + dur
+                            resumed.remove(event.packageName)
+                        }
+                    }
+                }
             }
-            val file = File(context.cacheDir, "$pkg.png")
-            FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
-            "file://${file.absolutePath}"
         } catch (e: Exception) {
-            Log.e("AppUsageModule", "Icon save failed for $pkg: ${e.message}")
-            ""
+            Log.e(TAG, "Event parsing failed: ${e.message}")
         }
+
+        return map
     }
 
     private fun formatTime(ms: Long): String {
-        val mins = ms / 60000
-        val hrs = mins / 60
-        val rem = mins % 60
-        return if (hrs > 0) "${hrs}h ${rem}m" else "${rem}m"
+        if (ms < 60000) return "0m"
+        val mins = (ms / 60000).toInt()
+        val h = mins / 60
+        val m = mins % 60
+        return when {
+            h > 0 && m > 0 -> "${h}h ${m}m"
+            h > 0 -> "${h}h"
+            m > 0 -> "${m}m"
+            else -> "0m"
+        }
+    }
+
+    private fun drawableToBase64(drawable: Drawable): String {
+        val bmp = when (drawable) {
+            is BitmapDrawable -> drawable.bitmap
+            else -> {
+                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bitmap
+            }
+        }
+        val stream = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 80, stream)
+        return Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
     }
 }
