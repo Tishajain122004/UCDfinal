@@ -160,7 +160,14 @@ exports.saveTodayAnalytics = async (req, res) => {
     console.log('  - Apps count:', app_usage_data?.length);
     console.log('  - Sample app data:', JSON.stringify(app_usage_data?.[0], null, 2));
 
+    console.log('📥 Received analytics data:');
+    console.log('  - Auth User ID:', authUserId);
+    console.log('  - Total time:', total_screen_time_ms);
+    console.log('  - Apps count:', app_usage_data?.length);
+    console.log('  - Sample app data:', JSON.stringify(app_usage_data?.[0], null, 2));
+
     if (!total_screen_time_ms || !app_usage_data) {
+     
       return res.status(400).json({
         success: false,
         message: 'Missing required fields',
@@ -171,10 +178,21 @@ exports.saveTodayAnalytics = async (req, res) => {
     const publicUserId = await getPublicUserId(authUserId);
     console.log('  - Public User ID:', publicUserId);
 
+
     const today = new Date().toISOString().split('T')[0];
 
     const { data, error } = await supabase
       .from('daily_analytics')
+      .upsert(
+        {
+          user_id: publicUserId,
+          date: today,
+          total_screen_time_ms,
+          app_usage_data,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,date' }
+      )
       .upsert(
         {
           user_id: publicUserId,
@@ -193,27 +211,38 @@ exports.saveTodayAnalytics = async (req, res) => {
     }
 
     console.log('✅ Analytics saved successfully for:', publicUserId);
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      throw error;
+    }
+
+    console.log('✅ Analytics saved successfully for:', publicUserId);
 
     res.status(200).json({
       success: true,
       message: 'Analytics saved successfully',
       data: data[0],
+      data: data[0],
     });
   } catch (error) {
+    console.error('❌ Save analytics error:', error.message);
     console.error('❌ Save analytics error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to save analytics',
+      error: error.message,
       error: error.message,
     });
   }
 };
 
 // ✅ Get last 7 days analytics
+// ✅ Get last 7 days analytics
 exports.getWeeklyAnalytics = async (req, res) => {
   try {
     const authUserId = req.user.id;
     const publicUserId = await getPublicUserId(authUserId);
+ 
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -222,6 +251,7 @@ exports.getWeeklyAnalytics = async (req, res) => {
     const { data, error } = await supabase
       .from('daily_analytics')
       .select('*')
+      .eq('user_id', publicUserId)
       .eq('user_id', publicUserId)
       .gte('date', startDate)
       .order('date', { ascending: true });
@@ -232,9 +262,16 @@ exports.getWeeklyAnalytics = async (req, res) => {
       daily_stats: data.map(item => ({
         date: item.date,
         total_screen_time_ms: item.total_screen_time_ms, // ✅ Fixed field name
+        total_screen_time_ms: item.total_screen_time_ms, // ✅ Fixed field name
         total_time_formatted: formatTime(item.total_screen_time_ms),
         app_usage_data: item.app_usage_data, // ✅ Return full app data
+        app_usage_data: item.app_usage_data, // ✅ Return full app data
       })),
+      total_screen_time: data.reduce(
+        (sum, item) => sum + item.total_screen_time_ms,
+        0
+      ),
+      top_apps: calculateTopApps(data),
       total_screen_time: data.reduce(
         (sum, item) => sum + item.total_screen_time_ms,
         0
@@ -245,24 +282,30 @@ exports.getWeeklyAnalytics = async (req, res) => {
     res.status(200).json({
       success: true,
       data: processedData,
+      data: processedData,
     });
   } catch (error) {
+    console.error('❌ Get weekly analytics error:', error.message);
     console.error('❌ Get weekly analytics error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch analytics',
+      error: error.message,
       error: error.message,
     });
   }
 };
 
 // 🔧 Format milliseconds
+// 🔧 Format milliseconds
 function formatTime(ms) {
   const hours = Math.floor(ms / (1000 * 60 * 60));
   const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
+// 🔧 Calculate top 5 apps
 // 🔧 Calculate top 5 apps
 function calculateTopApps(data) {
   const appTotals = {};
@@ -275,8 +318,11 @@ function calculateTopApps(data) {
           packageName: app.packageName,
           appName: app.appName || app.packageName,
           totalTime: 0,
+          totalTime: 0,
         };
       }
+      // ✅ Fixed: Use timeMs instead of totalTimeInForeground
+      appTotals[app.packageName].totalTime += app.timeMs || 0;
       // ✅ Fixed: Use timeMs instead of totalTimeInForeground
       appTotals[app.packageName].totalTime += app.timeMs || 0;
     });
@@ -287,6 +333,7 @@ function calculateTopApps(data) {
     .slice(0, 5)
     .map(app => ({
       ...app,
+      formattedTime: formatTime(app.totalTime),
       formattedTime: formatTime(app.totalTime),
     }));
 }
