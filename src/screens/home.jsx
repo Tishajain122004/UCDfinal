@@ -18,6 +18,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useFocusEffect } from "@react-navigation/native";
+import { GROQ_API_KEY } from '@env';
+
 
 // --- IMPORT YOUR MOOD ICON ---
 // Make sure this path is correct relative to home.jsx
@@ -29,19 +31,17 @@ const happyIcon = "emoticon-happy-outline";
 import { getAllTasks } from '../services/studyTaskApi';
 // FIX 1: Import path 'supabaseServices' se 'chatService' kiya gaya
 import { chatService, getCurrentUser } from '../services/chatService'; 
-import { GROQ_API_KEY } from '@env';
+// import { GROQ_API_KEY } from '@env';
 
 import axios from 'axios'; // axios ko import karein
 
 // --- GROQ & CHAT CONSTANTS ---
 const GROQ_MODEL = "openai/gpt-oss-20b";
-const GROQ_API_KEY  = GROQ_API_KEY;
+// const GROQ_API_KEY  = GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// ‼️ IMPORTANT: YEH AAPKE OLLAMA BACKEND KA URL HAI
-// Yeh aapka local IP + port 3000 hai (jaisa aapki friend ke setup mein tha)
-// Agar aapka IP badalta hai, toh ise change karein
-const OLLAMA_BACKEND_URL = 'http://10.193.206.36:3000';
+
+// const OLLAMA_BACKEND_URL = 'http://10.193.206.36:3000';
 
 const INITIAL_AI_MESSAGE = {
     id: 'initial-ai',

@@ -186,7 +186,7 @@ const features = [
   // { key: "leaderboard", title: "Leaderboard", subtitle: "See who's crushing their goals", icon: "🏆" },
     { key: "Achievements", title: "Achievements", subtitle: "See who's crushing their goals", icon: "🏆" },
 
-  { key: "parental", title: "Parental Report", subtitle: "Share progress with parents", icon: "📄" },
+  // { key: "parental", title: "Parental Report", subtitle: "Share progress with parents", icon: "📄" },
   // { key: "settings", title: "Settings", subtitle: "Manage your account and preferences", icon: "⚙️" },
 ];
 
